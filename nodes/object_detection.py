@@ -1,10 +1,4 @@
-import rospy
-import sys
-import cv2
-from cv_bridge import CvBridge, CvBridgeError
-from geometry_msgs.msg import Pose
-from sensor_msgs.msg import Image, CameraInfo, CompressedImage
-# from std_msgs.msg import String
+#!/usr/bin/env python3
 
 """
 bridge = CvBridge()
@@ -14,6 +8,16 @@ TODO
 
 """
 
+import rospy
+import sys
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+from geometry_msgs.msg import Pose
+from sensor_msgs.msg import Image, CameraInfo, CompressedImage
+# from std_msgs.msg import String
+
+
+
 class Classification():
     """
     TODO - Documentaion
@@ -22,8 +26,8 @@ class Classification():
         can_diameter = 360 # TODO - mesure [units are pixels]
         bottle_diameter = 120 # TODO - mesure [units are pixels]
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber('/cameras/???', Image,
-                                    self.image_callback, queue_size=1) # TODO - which camera??
+        self.image_sub = rospy.Subscriber('/cameras/right_hand_camera', Image,
+                                    self.image_callback, queue_size=1)
         self.capture = cv2.VideoCapture(2)  # TODO - which camera??
 
 
