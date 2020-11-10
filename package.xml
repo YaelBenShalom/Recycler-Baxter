@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>can_sort</name>
+    <version>0.0.0</version>
+    <description>ME495 Final Project</description>
+
+    <maintainer email="jketchum@u.northwestern.edu">Jake</maintainer>
+    <maintainer email="jketchum@u.northwestern.edu">Jake</maintainer>
+    <maintainer email="jketchum@u.northwestern.edu">Jake</maintainer>
+    <maintainer email="jketchum@u.northwestern.edu">Jake</maintainer>
+    <maintainer email="jketchum@u.northwestern.edu">Jake</maintainer>
+    <license>MIT</license>
+
+    <!-- Dependenceis needed to build this package -->
+    <buildtool_depend>catkin</buildtool_depend>
+    <build_depend>rospy</build_depend>
+    <build_depend>tf</build_depend>
+    <build_depend>geometry_msgs</build_depend>
+    <build_depend>moveit_msgs</build_depend>
+    <build_depend>std_msgs</build_depend>
+    <build_depend>message_generation</build_depend>
+   
+    <!-- Dependencies needed to build against this package --> 
+    <build_export_depend>rospy</build_export_depend>
+    
+    <!-- Dependencies required at runtime -->
+    <exec_depend>rviz</exec_depend>
+    <exec_depend>message_runtime</exec_depend>
+    
+
+</package>
+
