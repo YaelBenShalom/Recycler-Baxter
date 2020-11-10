@@ -5,3 +5,6 @@ unset ROS_HOSTNAME
 
 ## To open the right hand camera image
 rosrun image_view image_view image:=/cameras/right_hand_camera/image
+
+## To save images
+rosrun image_view image_saver image:=/cameras/right_hand_camera/image
