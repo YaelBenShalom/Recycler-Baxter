@@ -1,0 +1,7 @@
+## Always set enviornment variables
+export ROS_MASTER_URI=http://10.42.0.2:11311
+export ROS_IP=10.42.0.1
+unset ROS_HOSTNAME
+
+## To open the right hand camera image
+rosrun image_view image_view image:=/cameras/right_hand_camera/image
