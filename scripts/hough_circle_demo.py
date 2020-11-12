@@ -18,11 +18,12 @@ file_name = "bottle_top_1.jpg"
 directory_name ="../camera_images/11.10.20/"
 
 # Read in the image
-img = cv.imread(directory_name + file_name)
+img = cv.imread(file_name)
 
 # Check the file name was right
 if img is None: 
-    sys.exit("could not read the image.")
+    sys.exit("""could not read the image. Make sure you are running 
+the script from the /scripts folder.""")
 
 print(img.item(1,1,1))#ignore this
 
