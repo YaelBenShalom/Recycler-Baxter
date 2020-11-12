@@ -15,18 +15,18 @@ from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
 from baxter_core_msgs.msg import EndEffectorState 
 from baxter_core_msgs.srv import SolvePositionIK, SolvePositionIKRequest
 from moveit_commander import MoveGroupCommander
-from baxter_interface import Gripper, 
+from baxter_interface import Gripper, CHECK_VERSION
 from moveit_commander import RobotCommander
 from numpy import result_type
 
 
 class Mover:
     def __init__(self):
-    ''' Initialize environment'''
+        '''Initialize environment'''
     
         #Initialized baxter
-        self.robot = baxter_interface.robot_enable.RobotEnable()
-        rospy.sleep(0.5)
+        baxter_interface.robot_enable.RobotEnable()
+        rospy.loginfo('Baxter enabled!')
         
 
         #IK service
@@ -54,8 +54,7 @@ class Mover:
         self.scene = moveit_commander.PlanningSceneInterface()
 
         #Left arm
-        group_name = "left_arm"
-        self.left_group = moveit_commander.MoveGroupCommander(group_name)
+        self.left_group = moveit_commander.MoveGroupCommander("left_arm")
         pose_left = Pose()
         pose_left.position = Point(0.0, 0.0, 0.0)
         pose_left.orientation = Quaternion (0.0 ,0.0, 0.0, 1.0)
@@ -63,28 +62,33 @@ class Mover:
 
 
         #Right arm (Using this arm)
-        group_name = "right_arm"
-        self.right_group = moveit_commander.MoveGroupCommander(group_name)   
-        self.right_group.set_goal_position_tolerance(0.01)
-        self.right.group.set_goal_orientation_tolerance(0.01)
+
+        self.right_group = moveit_commander.MoveGroupCommander("right_arm") 
+        self.right_group.set_goal_position_tolerance(0.001)
+        self.right_group.set_goal_orientation_tolerance(0.01)
 
 
         #Right gripper
-        self.right_gripper = baxter_interface.gripper.Gripper('right')
+        self.right_gripper = Gripper('right',CHECK_VERSION)
         self.right_gripper.calibrate()
+        self.right_gripper.open()
 
         #End-effector subscribe topic
         self.end_eff_sub = rospy.Subscriber("/robot/end_effector/right_gripper/state", EndEffectorState, end_eff_callback) 
         rospy.sleep(1)
 
-
         self.gripper_force = 0
+        
+        #Add table
+        self.add_box()
+
+        self.move_to_vision()
+        rospy.sleep(10)
+
 
 
         while not rospy.is_shutdown():
             try:    
-                self.robot()
-                self.move_to_vision()
                 rospy.wait_for_service('object_location_service',1.0)
                 #Example for response from vision service
                 res = obj_loc_srv.call('''Object_location from vision''')
@@ -93,9 +97,23 @@ class Mover:
                     self.grasp_object(res.x,res.y,res.z,obj_diameter)
                 else:
                     print("No objetc found")
-            except rospy.ServiceException, err:
-                print ("Service call failed: %s" % err)
+            except (rospy.ServiceException, rospy.ROSException) as e:
+                rospy.logerr("Service call failed: %s" % e)
             
+
+    def add_box(self):
+        '''
+        Add table to planning scene
+        '''
+        self.box_name = "table"
+        self.box_pose = PoseStamped()
+        self.box_pose.header.frame_id = "base"
+        self.box_pose.pose.position.x = 0.5
+        self.box_pose.pose.position.z = -0.2
+        self.box_pose.pose.orientation.w = 1.0
+        #Dimension
+        self.scene.add_box(self.box_name,self.box_pose,size(1,1.5,0.3))
+
 
 
 
@@ -122,8 +140,8 @@ class Mover:
                 IK_res = self.right_IK_srv(IK_req)
             else:
                 IK_res = self.left_IK_srv(IK_req)
-        except (rospy.ServiceException, rospy.ROSException), err_msg:
-            rospy.logerr("Service request failed: " % (err_msg))
+        except (rospy.ServiceException, rospy.ROSException) as err_msg:
+            rospy.logerr("Service request failed: " % err_msg)
             sys.exit("Error!")
         
         #If IK response is valid, plan and execute the trajectory
@@ -201,6 +219,7 @@ class Mover:
         self.right_gripper.close()        #Grab the bottle
         rospy.sleep(0.5)
         
+        #If gripper fetches nothing then goes back to vision state
         if gripper_force == 0:
             self.right_gripper.open()
             self.move_to_vision()
