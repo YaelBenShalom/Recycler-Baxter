@@ -24,7 +24,7 @@ img = cv.imread(directory_name + file_name)
 if img is None: 
     sys.exit("could not read the image.")
 
-print(img.item(1,1,1)#ignore this
+print(img.item(1,1,1))#ignore this
 
 
 def paint_circles(image, paint_image, color, min_rad, max_rad = 30):
