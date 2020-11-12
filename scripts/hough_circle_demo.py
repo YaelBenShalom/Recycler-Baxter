@@ -9,6 +9,7 @@ import cv2 as cv
 import sys
 from os import listdir
 import numpy as np
+import time
 
 # name of the file
 file_name = "bottle_top_1.jpg"
@@ -25,8 +26,26 @@ if img is None:
     sys.exit("""could not read the image. Make sure you are running 
 the script from the /scripts folder.""")
 
-print(img.item(1,1,1))#ignore this
 
+def remove_table(image, point = (1,1)):
+    """! Subtract the pixel value at the target point from all other pixels. 
+    Ideally this works to remove the table coloring from the image making the
+    objects we care about sharper. 
+
+    NOTE: This is pretty useless.
+
+    @param image an opencv image. 
+    @param point the location to use as a reference. 
+    @returns image with all pixels less by the value of probe_point's location.
+    """
+    table_color = np.full(image.shape,([image.item(point[0],point[1],0),
+                                        image.item(point[0],point[1],1),
+                                        image.item(point[0],point[1],2)]))
+    table_color = table_color.astype(image.dtype) #make new image same type as original
+    print(table_color)
+    print(image)
+    cv.imshow("test", image)
+    return(cv.subtract(image, table_color))
 
 def paint_circles(image, paint_image, color, min_rad, max_rad = 30):
     """! This function finds all the specified circles and paints them.
@@ -63,8 +82,13 @@ paint_image= paint_circles(img, img, (0, 0, 255), 25)
 # Find bottles
 paint_image= paint_circles(img, paint_image, (255, 0, 0), 20)
 
+# Find bottle tabs
+paint_image= paint_circles(img, paint_image, (0, 255, 0), 20, max_rad = 10)
+
+remove_table(img)
 cv.imshow("detected circles",paint_image )
 
-k = cv.waitKey(0)
+
+cv.waitKey(0)
 
 
