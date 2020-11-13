@@ -109,7 +109,7 @@ class Detect():
 
     def get_board_state(self, srv):
         """! Run object detection to produce board state from last stored image.
-        
+        Currently incomplete 
         """
 
         # This is just the script for testing, evertying here needs to change
@@ -134,7 +134,7 @@ class Detect():
       
 
     def detect_cans(self, image):
-        """!
+        """! This is temporary and for testign only
         """
         rospy.loginfo("Detecting Cans")
         circles = self.detect_circles(image, min_rad = 25, max_rad = 30 )
@@ -147,18 +147,10 @@ class Detect():
             can.location.y = c[1]
             can.location.z = -1 #TODO: Impliment a decent vertical offset 
             cans.append(can)
-        for c in circles[0]:
-            can = Object()
-            can.type = self.CAN
-            can.sorted = False 
-            can.location.x = c[0]
-            can.location.y = c[1]
-            can.location.z = -1 #TODO: Impliment a decent vertical offset 
-            cans.append(can)
         return(cans)
 
     def detect_bottles(self, image):
-        """!
+        """! This is temporary and for testing only
         """
         rospy.loginfo("Detecting Cans")
         circles = self.detect_circles(image, min_rad = 20, max_rad = 25 )
@@ -174,7 +166,7 @@ class Detect():
         return(cans)
 
     def detect_circles(self, image, min_rad = 20, max_rad = 30):
-        """!
+        """! Also temporary and for testing
         """
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -191,6 +183,7 @@ class Detect():
 
     def paint_circles(self, image, paint_image, color, min_rad = 20, max_rad = 30):
         """! This function finds all the specified circles and paints them.
+        Yep, also for testing only
         """ 
         # TODO: Commeint or delete
         
