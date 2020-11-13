@@ -14,7 +14,7 @@
     <!-- Dependenceis needed to build this package -->
     <buildtool_depend>catkin</buildtool_depend>
     <build_depend>rospy</build_depend>
-    <build_depend>roscpp</build_depend>
+    <!-- <build_depend>roscpp</build_depend> -->
     <build_depend>tf</build_depend>
     <build_depend>geometry_msgs</build_depend>
     <build_depend>moveit_msgs</build_depend>
@@ -29,7 +29,7 @@
     <build_export_depend>std_msgs</build_export_depend>
     <build_export_depend>rospy</build_export_depend>
     <build_export_depend>roscpp</build_export_depend>
-    <build_export_depend>baxter_core>msgs</build_export_depend>    
+    <build_export_depend>baxter_core_msgs</build_export_depend>    
     <!-- Dependencies required at runtime -->
     <exec_depend>rviz</exec_depend>
     <exec_depend>message_runtime</exec_depend>

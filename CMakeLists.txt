@@ -39,7 +39,9 @@ catkin_package(
 
 
 catkin_install_python(
-  PROGRAMS nodes/object_detection.py
+  PROGRAMS
+  nodes/object_detection.py
+  nodes/Mover.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
