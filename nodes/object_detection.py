@@ -24,7 +24,8 @@ import cv2
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import Image, CameraInfo, CompressedImage
-
+from can_sort.msg import Object
+from can_sort.srv import Board
 
 
 class Classification():
@@ -59,6 +60,7 @@ class Classification():
         prevent invalid service calls.
         """
         rospy.loginfo("Setting up services")
+        s = rospy.service('get_board_state', Board, handle_board_state)
         pass
 
 
@@ -84,6 +86,7 @@ class Classification():
         """! Run object detection to produce board state from last stored image.
         
         """
+        return []
       
 
 
