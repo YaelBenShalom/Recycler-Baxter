@@ -46,7 +46,7 @@ class Mover:
             bool    object_found
 
         '''
-        obj_loc_srv = rospy.ServiceProxy("object_location_service", Object_location)
+        # obj_loc_srv = rospy.ServiceProxy("object_location_service", Object_location)
         
         
         moveit_commander.roscpp_initialize(sys.argv)
@@ -96,7 +96,7 @@ class Mover:
 
 
         #End-effector subscribe topic
-        self.end_eff_sub = rospy.Subscriber("/robot/end_effector/right_gripper/state", EndEffectorState, end_eff_callback) 
+        self.end_eff_sub = rospy.Subscriber("/robot/end_effector/right_gripper/state", EndEffectorState, self.end_eff_callback) 
         rospy.sleep(1)
         
         #Add table
@@ -131,13 +131,13 @@ class Mover:
 
                 if self.objects_found: #res.objects_found
                     object_count = length(self.obj_type_list) #res.obj_type_list
-                    current_object_number = 0;
+                    current_object_number = 0
                     while current_object_number < object_count:
                         self.move_to_object(self.obj_type_list(current_object_number),self.obj_x_list(current_object_number),self.obj_y_list(current_object_number))
                         self.grasp_object(self.obj_type_list(current_object_number))
                         self.move_to_bin(self.obj_type_list(current_object_number))
                         self.move_to_home()
-                        current_object_number++
+                        # current_object_number++
                 else:
                     print("No objects found")
             except (rospy.ServiceException, rospy.ROSException) as e:
@@ -151,11 +151,11 @@ class Mover:
         self.box_name = "table"
         self.box_pose = PoseStamped()
         self.box_pose.header.frame_id = "base"
-        self.box_pose.pose.position.x = 0.5
-        self.box_pose.pose.position.z = -0.2
+        self.box_pose.pose.position.x = 0.9 ## This will change depending on how far the table is from the Baxter
+        self.box_pose.pose.position.z = -0.5
         self.box_pose.pose.orientation.w = 1.0
         #Dimension
-        self.scene.add_box(self.box_name,self.box_pose,size(1,1.5,0.3))
+        self.scene.add_box(self.box_name,self.box_pose,size =(0.75,1.83,0.75))
 
 ##########################################################################
 
