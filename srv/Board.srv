@@ -1,0 +1,3 @@
+bool use_real # If false stored images will be used. 
+---
+can_sort/Object[] objects

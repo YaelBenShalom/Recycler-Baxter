@@ -18,9 +18,14 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-#add_service_files(
-#    FILES 
-#)
+add_message_files(DIRECTORY msg
+                  FILES
+                  Object.msg)
+
+add_service_files(DIRECTORY srv
+    FILES
+    Board.srv 
+)
 
 generate_messages(
     DEPENDENCIES geometry_msgs moveit_msgs std_msgs
