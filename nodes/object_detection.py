@@ -28,7 +28,7 @@ from can_sort.msg import Object
 from can_sort.srv import Board
 
 
-class Classification():
+class detect():
     """! A class for classifying bottles and cans for sorting by baxter.
     A holding class for the node's functions. See file level doc string for 
     more detailed information about the ROS API. 
@@ -101,6 +101,19 @@ class Classification():
         """! Run object detection to produce board state from last stored image.
         
         """
+        # Set local so no change during run
+        img = self.img
+        paint_image= paint_circles(img, img, (0, 0, 255), 25)
+
+
+        # Find bottles
+        paint_image= paint_circles(img, paint_image, (255, 0, 0), 20)
+
+        # Find bottle tabs
+        paint_image= paint_circles(img, paint_image, (0, 255, 0), 20, max_rad = 10)
+
+        remove_table(img)
+        cv.imshow("detected circles",paint_image )
         return []
       
 
@@ -115,16 +128,48 @@ class Classification():
 
 
 
+def paint_circles(image, paint_image, color, min_rad, max_rad = 30):
+    """! This function finds all the specified circles and paints them.
+    """ 
+    # TODO: Commeint or delete
+    
+    # Go to greyscale   
+    grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+
+    # Blur the image, this was in the tutorial who knows why
+    grey = cv.medianBlur(grey, 5)
+    
+    # Run the algorithm, get the circles
+    rows = grey.shape[0]
+    circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 8, 
+                              param1 = 100, param2 = 30,
+                              minRadius = min_rad, maxRadius = max_rad)
+    
+    # Paint the circles onto our paint image
+    if circles is not None: 
+        circles = np.uint16(np.around(circles))
+        for i in circles[0,:]:
+            print (i)
+            center = (i[0], i[1])
+            cv.circle(paint_image, center, 1, (0, 100, 100), 3)
+            radius = i[2]
+            cv.circle(paint_image, center, radius, color, 3)
+
+    return(paint_image)
+
+
+
+
+
 
 def main():
     """ The main() function """
     rospy.init_node('object detection', log_level = rospy.DEBUG)
     rospy.logdebug(f"classification node started")
     classification = Classification()
-    while not rospy.is_shutdown():
-        rospy.logdebug("Start classifying")
-        classification.classify_objects()
-    cv.destroyAllWindows()
+     
+
+    #cv.destroyAllWindows()
 
 
 if __name__ == '__main__':
