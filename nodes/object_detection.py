@@ -20,7 +20,7 @@ TODO
 
 import rospy
 import sys
-import cv2
+import cv2 as cv
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Pose
 from sensor_msgs.msg import Image, CameraInfo, CompressedImage
@@ -37,9 +37,14 @@ class Classification():
         # Identification Paramiters
         self.can_diameter = 80       # [units are pixels]
         self.bottle_diameter = 60    # [units are pixels]
+        
+        # Info for default image 
+        self.image_directory ="../camera_images/11.10.20/"
+        self.image_name = "bottle_top_1.jpg"
     
+        #TODO: figure oout correct commenting style 
         ##! Stores the current image. 
-        self.image = self.set_default_image()
+        self.img = self.set_default_image()
         #self.setup_image_stream()
 
     def setup_image_stream(self):
@@ -52,7 +57,7 @@ class Classification():
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber('/cameras/right_hand_camera', Image,
                                     self.image_callback, queue_size=1)
-        self.capture = cv2.VideoCapture(2)  # TODO - which camera??
+        self.capture = cv.VideoCapture(2)  # TODO - which camera??
 
     def setup_services(self):
         """! Set up the the ros services provided by this node. 
@@ -63,6 +68,16 @@ class Classification():
         s = rospy.service('get_board_state', Board, handle_board_state)
         pass
 
+    def set_default_image(self):
+        """! Load a default image from the local files. Used for testing. 
+        """  
+        
+        # Read in the image
+        self.img = cv.imread(self.image_directory + self.image_name)
+
+        # Check the file name was right
+        if self.img is None: 
+            rospy.logwarn("WARNING: could not read default image")
 
     def image_callback(self, image_message): 
         """! Handle a new incomming image from the robot. 
@@ -74,7 +89,7 @@ class Classification():
         """         
         rospy.logdebug("Processing incomming image")               
         try:
-            cv_image = self.bridge.imgmsg_to_cv2(image_message,
+            cv_image = self.bridge.imgmsg_to_cv(image_message,
                                     desired_encoding='passthrough')
         except CvBridgeError as e:
             rospy.logwarn(e)
@@ -93,7 +108,7 @@ class Classification():
     
     def classify_objects(self):
         """
-        TODO - Documentaion
+        TODO - Documentaio/n
         """
         # TODO
         pass
@@ -107,10 +122,9 @@ def main():
     rospy.logdebug(f"classification node started")
     classification = Classification()
     while not rospy.is_shutdown():
-        rospy.logdebug(f"Start classifying")
+        rospy.logdebug("Start classifying")
         classification.classify_objects()
-    rospy.spin()
-    cv2.destroyAllWindows()
+    cv.destroyAllWindows()
 
 
 if __name__ == '__main__':
