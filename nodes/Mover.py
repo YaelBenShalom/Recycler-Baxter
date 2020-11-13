@@ -75,34 +75,71 @@ class Mover:
         
         #Default gripper orientation for all poses
         self.default_gripper_orientation = Quaternion(1.0,0.0,0.0,0.0) #Need to change this value
-        self.bottle_z = 1;
-        self.can_z = 2;
-        self.high_z = 1;
+        
+        #Soda Can default values
+        self.can_z = 0.1;
+        self.can_bin_x = 0.3;
+        self.can_bin_y = 0.3;
+        
+        #Water bottle Default values
+        self.bottle_z = 0.1;
+        self.bottle_bin_x = 0.3;
+        self.bottle_bin_y = 0.3;
+        
+        self.clearence_z = 0.4;  #Clearence Z Height
+        self.current_x = 0;
+        self.current_y = 0;
+        
+        self.home_x = 0;
+        self.home_y = 0;
+        self.home_z = self.clearence_z;
+
 
         #End-effector subscribe topic
         self.end_eff_sub = rospy.Subscriber("/robot/end_effector/right_gripper/state", EndEffectorState, end_eff_callback) 
         rospy.sleep(1)
-
-        self.gripper_force = 0
         
         #Add table
         self.add_box()
-
-        self.move_to_vision()
+        
+        #move to home
+        self.move_to_home()
+        
+        #Temporary Testing Values until vision service works
+        self.obj_x_list = [0.1, -0.2, 0.3, 0.5]
+        self.obj_y_list = [0.1, -0.2, 0.3, 0.5]
+        self.obj_type_list = ["soda", "bottle", "soda", "bottle"]
+        self.objects_found =  True
+        
         rospy.sleep(10)
 
 
 
         while not rospy.is_shutdown():
-            try:    
-                rospy.wait_for_service('object_location_service',1.0)
+            try:   
+                #Uncomment once service is written
+                
+                #rospy.wait_for_service('get_object_list',1.0)
                 #Example for response from vision service
-                res = obj_loc_srv.call('''Object_location from vision''')
+                #res = obj_loc_srv.call('''Object_list from vision''')
+                
+                #res attributes =:
+                #objects_found =  True or False
+                #obj_type_list = list of strings, i.e. ["soda", "bottle", "soda", "bottle"]
+                #obj_x list of doubles for x position of each object, i.e. [0.1, -0.2, 0.3, 0.5]
+                #obj_y list of doubles for y position of each object, i.e. [0.1, -0.2, 0.3, 0.5]
 
-                if res.object_found:
-                    self.grasp_object(res.x,res.y,res.z,obj_diameter)
+                if self.objects_found: #res.objects_found
+                    object_count = length(self.obj_type_list) #res.obj_type_list
+                    current_object_number = 0;
+                    while current_object_number < object_count:
+                        self.move_to_object(self.obj_type_list(current_object_number),self.obj_x_list(current_object_number),self.obj_y_list(current_object_number))
+                        self.grasp_object(self.obj_type_list(current_object_number))
+                        self.move_to_bin(self.obj_type_list(current_object_number))
+                        self.move_to_home()
+                        current_object_number++
                 else:
-                    print("No objetc found")
+                    print("No objects found")
             except (rospy.ServiceException, rospy.ROSException) as e:
                 rospy.logerr("Service call failed: %s" % e)
             
@@ -120,10 +157,7 @@ class Mover:
         #Dimension
         self.scene.add_box(self.box_name,self.box_pose,size(1,1.5,0.3))
 
-
-
-
-
+##########################################################################
 
     def request_pos(self,pose,arm,group):  
         #Set stamped pose
@@ -159,188 +193,118 @@ class Mover:
             rospy.sleep(2.0)
             group.execute(plan)
             rospy(0.5)
+            self.current_x = pose.position.x
+            self.currenty_y = pose.posiiton.y
             return True
         else:
             return False
 
-
-
-    def move_to_home(self):  #Move to home position
         
-        #Easy method, no planning scene objects needed for other bottles, current bottle, bins
-        #1. Get current gripper x,y pose
-        #2. Move to home Z height at current x,y position
-        #3. Move to home x,y position
-        
-        # Hard:
+##########################################################################
+
+    def move_to_home(self):  #Move to home position  
+        # Hard (optional) method:
         #Set planning scene with all objects at beginning
         #Add/attach bottle to robot on pickup
         #Remove current bottle from planning scene
         
+        #Easy method, no planning scene objects needed for other bottles, current bottle, bins
         
-        #move to home is just moving to a single home pose
+        #Set pose to home Z height at current x,y position
+        raise_z_pose = Pose()
+        raise_z_pose.position = Point(self.current_x,self.current_y,self.clearence_z)
+        raise_z_pose.orientation = self.default_gripper_orientation #Default Gripper Orientation
         
+        #Request move service
+        self.request_pos(raise_z_pose,"right",self.right_group)
         
-        #Set pose
-        pose = Pose()
-        pose.position = Point(0.2,0.1,0.3)
-        pose.orientation = self.default_gripper_orientation #Default Gripper Orientation
+        #Set pose for move to home x,y,z position
+        home_pose = Pose()
+        home_pose.position = Point(self.home_x,self.home_y,self.home_z)
+        home_pose.orientation = self.default_gripper_orientation #Default Gripper Orientation
         
-        #Request service
-        self.request_pos(pose,"right",self.right_group)
+        #Request move service
+        self.request_pos(home_pose,"right",self.right_group)
 
-    
+        
 
-    #Get force on the gripper, confirm object is grabbed 
+    #Get force on the gripper
     def end_eff_callback(self,res):
         self.gripper_force = res.force
 
 
-
-
-    def move_to_object(self,obj_type):
         
-        #For Soda Can
-        #Position = point(soda.x,soda.y,high z)
-        #Orientation =  self.default_gripper_orientation
-        #self.request_pos
+    def move_to_object(self,obj_type,obj_x,obj_y):
         
-        #Position = point(soda.x,soda.y,soda.z)
-        #Orientation =  self.default_gripper_orientation
-        #self.request_pos
-        
-        #For Water Bottle
-        #Position = point(bottle.x,bottle.y,high z)
-        #Orientation =  self.default_gripper_orientation
-        #self.request_pos
-        
-        #Position = point(bottle.x,bottle.y,bottle.z)
-        #Orientation =  self.default_gripper_orientation
-        #self.request_pos
-        
-        #
+        #Move to object x,y position at clearence z height
+        obj_pose = Pose()
         if  obj_type == "soda":
-            #Move to place1
-            pose = Pose()
-            pose.position = Point(0.5,0.2,0.2)    #Example position
-            pose.orientation = Quaternion(1.0,0.0,0.0,0.0)
+            obj_pose.position = Point(obj_x,obj_y,self.clearence_z)    #Example position
+            obj_pose.orientation = self.default_gripper_orientation
         else:
-            #Move to place2
-            pose = Pose()
-            pose.position = Point(-0.3,-0.2,0.2)    #Example position
-            pose.orientation = Quaternion(1.0,0.0,0.0,0.0)
-        self.request_pos(pose,'right',self.right_group)
+            obj_pose.position = Point(obj_x,obj_y,self.clearence_z)    #Example position
+            obj_pose.orientation = self.default_gripper_orientation
+        self.request_pos(obj_pose,'right',self.right_group) 
+
+        #Move down in z to object height
+        obj_pose = Pose()
+        if  obj_type == "soda":
+            obj_pose.position = Point(obj_x,obj_y,self.can_z)    #Example position
+            obj_pose.orientation = self.default_gripper_orientation
+        else:
+            obj_pose.position = Point(obj_x,obj_y,self.bottle_z)    #Example position
+            obj_pose.orientation = self.default_gripper_orientation
+        
+        self.request_pos(obj_pose,'right',self.right_group)
     
 
 
-    def grasp_object(self,obj_type):
-    #def grasp_object(self, x_pos,y_pos,z_pos,obj_type):
+    def grasp_object(self,obj_type):  
         
         #add/attach bottle to robot (don't technically need)
+        if  obj_type == "soda":
+            self.right_gripper.close()  #Need to set close distance for bottle and can somehow
+            rospy.sleep(1)
+        else:
+            self.right_gripper.close()  #Need to set close distance for bottle and can somehow
+            rospy.sleep(1)
         
-        
-        #If Soda
-            #Close to Soda diameter
-            #Check Force
-            #IF force = 0
-                #remove object from robot arm
-                #move to home, retake photo and reset plannign scene
-         #else:
-            #Close to bottle diameter
-            #Check Force
-            #IF force = 0
-                #remove object from robot arm
-                #move to home, retake photo and reset plannign scene
-        
-        pose = Pose()
-        pose.position = Point(x_pos,y_pos,0.0)
-        pose.orientation = Quaternion(1.0,0.0,0.0,0.0)
-        self.request_pos(pose,'right',self.right_group)
-        rospy.sleep(0.5)
+        if gripper_force == 0:   # or less than a certain value (bad grip)
+            print('Object Grasp Failed')
+            self.right_gripper.open()
+            #remove object from robot arm
+            self.move_to_home()
+            #Call Reset vision scene
 
         # find distance of limb from nearest line of sight object (Adjustment for z_pos)
-        dist = baxter_interface.analog_io.AnalogIO('right_hand_range').state()
-        rospy.sleep(1)
-        if  obj_type == "soda":
-            print('Out of range')
-            z = '''... '''
-        else: 
-            print('Distance is %f' % dist)
-            z = '''dist'''
-
-
-        pose2 = Pose()
-        pose2.position = Point(x_pos,y_pos,z)
-        pose2.orientation = Quaternion(1.0,0.0,0.0,0.0)
-        self.request_pos(pose2,'right',self.right_group)
-        rospy.sleep(0.5)
-        self.right_gripper.close()        #Grab the bottle
-        rospy.sleep(0.5)
-        
-        #If gripper fetches nothing then goes back to vision state
-         #For grasp function, if gripper force is not what is expected, move to home and re-take picture
-        if gripper_force == 0:   # or less than a certain value (bad grip)
-            self.right_gripper.open()
-            self.move_to_home()
-        else:
-            pose = Pose()
-            pose.position = Point(x_pos,y_pos,0.3)
-            pose.orientation = Quaternion(1.0,0.0,0.0,0.0)
-            self.request_pos(pose,'right',self.right_group)    #Lift up
-            if gripper_force == 0:
-                self.right_gripper.open()
-                self.move_to_vision()
-                return
-            self.move_to_destination(obj_diameter)
-            self.right_gripper.open()
-            self.move_to_vision()
+        #dist = baxter_interface.analog_io.AnalogIO('right_hand_range').state()
+        #print('Distance is %f' % dist)
 
             
-    def move_to_bin(self,object_diameter?):
+    def move_to_bin(self,obj_type):
         
-        #If Soda Can
-        #Position = point(soda.x,soda.y,high z)
-        #Orientation =  self.default_gripper_orientation
-        #self.request_pos
+        #Move to object x,y position at clearence z height
+        raised_pose = Pose()
+        raised_pose.position = Point(self.current_x,self.current_y,self.clearence_z)  
+        raised_pose.orientation = self.default_gripper_orientation
+        self.request_pos(raised_pose,'right',self.right_group)
         
-        #Position = point(soda_bin.x,soda_bin.y,high.z)
-        #Orientation =  self.default_gripper_orientation
-        #self.request_pos
-        
-        # Open Gripper
-        
-        ##########################
-        
-        # else (For Water Bottle)
-        #Position = point(bottle.x,bottle.y,high z)
-        #Orientation =  self.default_gripper_orientation
-        #self.request_pos
-        
-        #Position = point(bottle_bin.x,bottle_bin.y,high.z)
-        #Orientation =  self.default_gripper_orientation
-        #self.request_pos
-        
-        # Open Gripper
-        
-        #########################
-        
-        #Remove dropped object from list of objects
-        
-        
-        #
+        #Move Object to corresponding bin
+        bin_pose = Pose()
         if  obj_type == "soda":
-            #Move to place1
-            pose = Pose()
-            pose.position = Point(0.5,0.2,0.2)    #Example position
-            pose.orientation = Quaternion(1.0,0.0,0.0,0.0)
+            bin_pose.position = Point(self.can_bin_x,self.can_bin_y,self.clearence_z)    #Example position
+            bin_pose.orientation = self.default_gripper_orientation
         else:
-            #Move to place2
-            pose = Pose()
-            pose.position = Point(-0.3,-0.2,0.2)    #Example position
-            pose.orientation = Quaternion(1.0,0.0,0.0,0.0)
-        self.request_pos(pose,'right',self.right_group)
-
-
+            bin_pose.position = Point(self.bottle_bin_x,self.bottle_bin_y,self.clearence_z)    #Example position
+            bin_pose.orientation = self.default_gripper_orientation
+        self.request_pos(bin_pose,'right',self.right_group) 
+        rospy.sleep(1)
+        
+        #Drop Object
+        self.right_gripper.open()
+        rospy.sleep(1)
+        print('Object Recycled')
+        #Remove Object from Robot
 
 
 def main():
