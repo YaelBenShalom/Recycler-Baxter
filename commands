@@ -6,5 +6,10 @@ unset ROS_HOSTNAME
 ## To open the right hand camera image
 rosrun image_view image_view image:=/cameras/right_hand_camera/image
 
+## To open the head camera image
+rosrun image_view image_view image:=/cameras/head_camera/image
+
 ## To save images
 rosrun image_view image_saver image:=/cameras/right_hand_camera/image
+
+rosrun image_view image_saver image:=/cameras/head_camera/image

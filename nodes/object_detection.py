@@ -23,8 +23,9 @@ class Classification():
     TODO - Documentaion
     """
     def __init__(self):
-        can_diameter = 360 # TODO - mesure [units are pixels]
-        bottle_diameter = 120 # TODO - mesure [units are pixels]
+        can_diameter = 80       # [units are pixels]
+        bottle_diameter = 60    # [units are pixels]
+
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber('/cameras/right_hand_camera', Image,
                                     self.image_callback, queue_size=1)
