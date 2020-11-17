@@ -68,6 +68,7 @@ class Mover:
 
         #Right gripper
         self.right_gripper = Gripper('right')
+        self.right_gripper.type() == 'electric'
         self.right_gripper.calibrate()
         self.right_gripper.open()
         
@@ -285,10 +286,12 @@ class Mover:
         
         #add/attach bottle to robot (don't technically need)
         if  obj_type == "soda":
-            self.right_gripper.close()  #Need to set close distance for bottle and can somehow  (There is a self.type = 'electric' in gripper.close() function we may need to use)
+            self.right_gripper.command_position(65) # where 0=close 100=open
+            # self.right_gripper.close()  #Need to set close distance for bottle and can somehow  (There is a self.type = 'electric' in gripper.close() function we may need to use)
             rospy.sleep(1)
         else:
-            self.right_gripper.close()  #Need to set close distance for bottle and can somehow
+            self.right_gripper.command_position(30) # where 0=close 100=open
+            # self.right_gripper.close()  #Need to set close distance for bottle and can somehow
             rospy.sleep(1)
         print("Close the gripper")
         
