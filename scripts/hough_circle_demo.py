@@ -22,8 +22,8 @@ config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
 # Recording video to bagfile
-# config.enable_record_to_file("bagfiles/camera_video")  # Comment this if you want to work of saved bagfile
-config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
+config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
+# config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
 
 # Start streaming
 pipeline.start(config)
@@ -101,10 +101,10 @@ try:
 
 
         # Find cans - blue
-        paint_image = paint_circles(img, img, (0, 0, 255), 22, 26)
+        paint_image = paint_circles(img, img, (0, 0, 255), 21, 26)
 
         # Find bottles - red
-        paint_image = paint_circles(img, paint_image, (255, 0, 0), 10, 17)
+        paint_image = paint_circles(img, paint_image, (255, 0, 0), 10, 15)
 
         # Find bottle tabs - green
         # paint_image = paint_circles(img, paint_image, (0, 255, 0), 6, max_rad = 10)
