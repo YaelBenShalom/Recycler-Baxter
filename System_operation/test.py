@@ -11,6 +11,7 @@ import baxter_interface
 import std_msgs.msg
 import cv2
 import cv_bridge 
+from math 
 from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
 from baxter_core_msgs.msg import EndEffectorState 
 from baxter_core_msgs.srv import SolvePositionIK, SolvePositionIKRequest
@@ -113,11 +114,20 @@ class Mover:
 
         self.gripper_force = 0
         
+        # Poisiton for X and Y (Shoulder Joing?)
+        self.shoulder_x = 0
+        self.shoulder_y = 0
+        
+        # Radius within which baxter can pick something up. Length of maxter's arm at Table Height?
+        self.pickup_radius = .5
+        
         # #Add table
         self.add_box()
+
         
         #move to home
         self.move_to_home()
+        
         
         #Temporary Testing Values until vision service works
         # self.obj_x_list = [0.8, 0.7, 0.83, 0.75]
@@ -154,12 +164,16 @@ class Mover:
                     object_count = len(self.obj_type_list) #res.obj_type_list
                     current_object_number = 0
                     while current_object_number < object_count:
-                        self.move_to_object(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
-                        self.grasp_object(self.obj_type_list[current_object_number])
-                        self.move_to_bin(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
-                        self.move_to_home()
+                        if check_in_bounds(self,obj_x,obj_y):
+                            print("Object %d is in Bounds" % current_object_number)
+                            self.move_to_object(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
+                            self.grasp_object(self.obj_type_list[current_object_number])
+                            self.move_to_bin(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
+                            self.move_to_home()
+                        else:
+                            print("Object %d is out of Bounds" % current_object_number)
+                            print('Moving to next object')
                         current_object_number += 1
-                        print('current object number %d \n' % current_object_number)
                     break
                 else:
                     print("No objects found")
@@ -382,6 +396,14 @@ class Mover:
         print('Object Recycled')
         #Remove Object from Robot
 
+    def check_in_bounds(self,obj_x,obj_y):
+        distance_to_object = math.sqrt( math.pow((obj_x - self.shoulder_x),2) + math.pow((obj_y - self.shoulder_y),2) )
+        if distance_to_object > self.pickup_radius:
+            return False
+        else:
+            return True
+        
+        
 
 def main():
     """ 
