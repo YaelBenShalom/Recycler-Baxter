@@ -40,6 +40,7 @@ try:
         img = np.asanyarray(color_frame.get_data())
         height, width = img.shape[:2]
         img = cv.resize(img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
+        img = img[390:790, 680:1080]
         # Check the file name was right
         if img is None: 
             sys.exit("""could not read the image. Make sure you are running 
@@ -68,6 +69,9 @@ try:
         def paint_circles(image, paint_image, color, min_rad, max_rad = 10):
             """! This function finds all the specified circles and paints them.
             """ 
+            # cv.imshow("img", img)
+            # crop_img = img[400:800, 700:1100]
+            # cv.imshow("crop_img", crop_img)
             # Go to greyscale   
             grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
             ret, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
@@ -77,9 +81,9 @@ try:
             # grey = cv.blur(grey,( 5,5))
             # cv.imshow("blur", grey)
             grey = cv.medianBlur(grey, 5)
-            cv.imshow("medianBlur", grey)
+            # cv.imshow("medianBlur", grey)
             grey = cv.GaussianBlur(grey, (5,5), 0)
-            cv.imshow("GaussianBlur", grey)
+            # cv.imshow("GaussianBlur", grey)
 
             # Run the algorithm, get the circles
             rows = grey.shape[0]

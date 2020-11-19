@@ -29,6 +29,7 @@ from geometry_msgs.msg import Pose
 from sensor_msgs.msg import Image, CameraInfo, CompressedImage
 from can_sort.msg import Object
 from can_sort.srv import Board, BoardResponse
+import pyrealsense2 as rs
 
 
 class Detect():
@@ -38,9 +39,10 @@ class Detect():
     """
     def __init__(self):
         # Identification Paramiters
-        self.can_diameter = 80       # [units are pixels]
-        self.bottle_diameter = 60    # [units are pixels]
-        
+        self.can_diameter_min = 21       # [units are pixels]
+        self.can_diameter_max = 26       # [units are pixels]
+        self.bottle_diameter_min = 10    # [units are pixels]
+        self.bottle_diameter_max = 15    # [units are pixels]
 
         # Object Type Definitions
         #TODO: Move these to a common library or param server.
@@ -78,7 +80,8 @@ class Detect():
         prevent invalid service calls.
         """
         rospy.loginfo("Setting up services")
-        s = rospy.Service('get_board_state', Board, self.get_board_state)
+        board_service = rospy.Service('get_board_state', Board, self.get_board_state)
+
 
     def set_default_image(self):
         """! Load a default image from the local files. Used for testing. 
@@ -88,6 +91,7 @@ class Detect():
         # Check the file name was right
         if self.img is None: 
             rospy.logwarn("WARNING: could not read default image")
+
 
     def image_callback(self, image_message): 
         """! Handle a new incomming image from the robot. 
@@ -99,13 +103,14 @@ class Detect():
         """         
         rospy.logdebug("Processing incomming image")               
         try:
-            cv_image = self.bridge.imgmsg_to_cv(image_message,
+            cv_image = self.bridge.imgmsg_to_cv2(image_message,
                                     desired_encoding='passthrough')
         except CvBridgeError as e:
             rospy.logwarn(e)
 
         #TODO: store centrally or remove.
         (rows,cols,channels) = cv_image.shape
+
 
     def get_board_state(self, srv):
         """! Run object detection to produce board state from last stored image.
@@ -119,25 +124,31 @@ class Detect():
         objects = [] 
         objects.extend(self.detect_cans(img))
         objects.extend(self.detect_bottles(img))
-        print(objects )
+        print(objects)
         
-    
-        #(circles, paint_image) = self.paint_circles(self.img, img, (0, 0, 255), 25)
-        # Find bottles
-        #(circles, paint_image) = self.paint_circles(img, paint_image, (255, 0, 0), 20)
+        # # Find cans - blue
+        # paint_image = self.paint_circles(img, img, (0, 0, 255), 21, 26)
 
+        # # Find bottles - red
+        # paint_image = self.paint_circles(img, paint_image, (255, 0, 0), 10, 15)
 
-        #cv.imshow("detected circles",paint_image )
-        #cv.waitKey(0)
+        # # Show image
+        # cv.namedWindow("detected_circles", cv.WINDOW_AUTOSIZE)
+        # cv.imshow("detected_circles", paint_image)
+        # key = cv.waitKey(1)
+
+        # # Press esc or 'q' to close the image window
+        # if key & 0xFF == ord('q') or key == 27:
+        #     cv.destroyAllWindows()
 
         return  BoardResponse(objects)
       
 
     def detect_cans(self, image):
         """! This is temporary and for testign only
-        """
+        """ # TODO
         rospy.loginfo("Detecting Cans")
-        circles = self.detect_circles(image, min_rad = 25, max_rad = 30 )
+        circles = self.detect_circles(image, self.can_diameter_min, self.can_diameter_max)
         cans = []
         for c in circles[0]:
             can = Object()
@@ -149,11 +160,13 @@ class Detect():
             cans.append(can)
         return(cans)
 
+
     def detect_bottles(self, image):
         """! This is temporary and for testing only
-        """
-        rospy.loginfo("Detecting Cans")
-        circles = self.detect_circles(image, min_rad = 20, max_rad = 25 )
+        """ # TODO
+        rospy.loginfo("Detecting Bottles")
+        circles = self.detect_circles(image, self.bottle_diameter_min, self.bottle_diameter_max)
+        rospy.loginfo(f"circles = {circles}")
         cans = []
         for c in circles[0]:
             can = Object()
@@ -165,23 +178,27 @@ class Detect():
             cans.append(can)
         return(cans)
 
-    def detect_circles(self, image, min_rad = 20, max_rad = 30):
+
+    def detect_circles(self, image, min_rad = 10, max_rad = 30):
         """! Also temporary and for testing
-        """
+        """  # TODO
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+        ret, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
 
-        # Blur the image, this was in the tutorial who knows why
+        # Blur the image
         grey = cv.medianBlur(grey, 5)
-        
+        grey = cv.GaussianBlur(grey, (5,5), 0)
+
         # Run the algorithm, get the circles
         rows = grey.shape[0]
-        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 8, 
-                                  param1 = 100, param2 = 30,
-                                  minRadius = min_rad, maxRadius = max_rad)
+        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
+                                param1 = 100, param2 = 30,
+                                minRadius = min_rad, maxRadius = max_rad)
         return(circles) 
 
-    def paint_circles(self, image, paint_image, color, min_rad = 20, max_rad = 30):
+
+    def paint_circles(self, image, paint_image, color, min_rad, max_rad = 10):
         """! This function finds all the specified circles and paints them.
         Yep, also for testing only
         """ 
@@ -189,29 +206,29 @@ class Detect():
         
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+        ret, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
 
-        # Blur the image, this was in the tutorial who knows why
+        # Blur the image
         grey = cv.medianBlur(grey, 5)
-        
+        grey = cv.GaussianBlur(grey, (5,5), 0)
+
         # Run the algorithm, get the circles
         rows = grey.shape[0]
-        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 8, 
-                                  param1 = 100, param2 = 30,
-                                  minRadius = min_rad, maxRadius = max_rad)
+        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
+                                param1 = 100, param2 = 30,
+                                minRadius = min_rad, maxRadius = max_rad)
+
         # Paint the circles onto our paint image
         if circles is not None: 
-            circles = np.uint16(np.around(circles))
-            for i in circles[0,:]:
-                center = (i[0], i[1])
-                cv.circle(paint_image, center, 1, (0, 100, 100), 3)
-                radius = i[2]
-                cv.circle(paint_image, center, radius, color, 3)
+                circles = np.uint16(np.around(circles))
+                for i in circles[0, :]:
+                    print ("circle: ", i)
+                    center = (i[0], i[1])
+                    cv.circle(paint_image, center, 1, (0, 100, 100), 3)
+                    radius = i[2]
+                    cv.circle(paint_image, center, radius, color, 3)
 
-        return(circles,paint_image)
-
-
-
-
+        return(circles, paint_image)
 
 
 def main():
