@@ -252,8 +252,11 @@ class Mover:
         home_pose.orientation = self.default_gripper_orientation    #Default Gripper Orientation
         #Request move service
         # self.request_pos(home_pose,"right",self.right_group)
-        self.right_group.set_pose_target(home_pose,end_effector_link="right_gripper")
-        plan = self.right_group.go(wait=True)
+        # self.right_group.set_pose_target(home_pose,end_effector_link="right_gripper")
+        # plan = self.right_group.go(wait=True)
+        waypoints = [home_pose]
+        (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.right_group.execute(plan, wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets() 
         print('At the home position')
@@ -271,18 +274,19 @@ class Mover:
         
     def move_to_object(self,obj_type,obj_x,obj_y):
         print("Moving to object perch position")
+        waypoints = []
         #Move to object x,y position at clearence z height
         obj_pose = Pose()
         obj_pose.position = Point(obj_x,obj_y,self.clearence_z)    #Example position
         obj_pose.orientation = self.default_gripper_orientation
-
+        waypoints.append(obj_pose)
         # self.request_pos(obj_pose,'right',self.right_group)
-        self.right_group.set_pose_target(obj_pose,end_effector_link="right_gripper")
-        plan = self.right_group.go(wait=True)
-        self.right_group.stop()
-        self.right_group.clear_pose_targets()
-        print("At the object perch position")
-        rospy.sleep(1)  
+        # self.right_group.set_pose_target(obj_pose,end_effector_link="right_gripper")
+        # plan = self.right_group.go(wait=True)
+        # self.right_group.stop()
+        # self.right_group.clear_pose_targets()
+        # print("At the object perch position")
+        # rospy.sleep(1)  
 
         #Move down in z to object height
         print("Moving to the grasping position")
@@ -300,15 +304,14 @@ class Mover:
         # plan = self.right_group.go(wait=True)
         ####################################################
         # Instead of using the 'set_pose_target above, we're switching to cartesian path
-        waypoints = [obj_pose]
+        waypoints.append(obj_pose)
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
-        waypoints = []
-
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets()  
         print("At the grasping position")
         rospy.sleep(1)
+        waypoints = []
 
     def grasp_object(self,obj_type):  
         
@@ -336,25 +339,20 @@ class Mover:
 
             
     def move_to_bin(self,obj_type,obj_x,obj_y):
+        waypoints = []
         
         #Move to object x,y position at clearence z height
         raised_pose = Pose()
         raised_pose.position = Point(obj_x,obj_y,self.clearence_z)  
         raised_pose.orientation = self.default_gripper_orientation
+        waypoints.append(raised_pose)
         # self.request_pos(raised_pose,'right',self.right_group)
         # self.right_group.set_pose_target(raised_pose,"right_gripper")
         # plan = self.right_group.go(wait=True)
-        ####################################################
-        # Instead of using the 'set_pose_target above, we're switching to cartesian path
-        waypoints = [raised_pose]
-        (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
-        self.right_group.execute(plan, wait=True)
-        waypoints = []
-
-        self.right_group.stop()
-        self.right_group.clear_pose_targets() 
-        print('Lifting object up')
-        rospy.sleep(1) 
+        # self.right_group.stop()
+        # self.right_group.clear_pose_targets() 
+        # print('Lifting object up')
+        # rospy.sleep(1) 
         
         #Move Object to corresponding bin
         bin_pose = Pose()
@@ -364,13 +362,17 @@ class Mover:
         else:
             bin_pose.position = Point(self.bottle_bin_x,self.bottle_bin_y,self.clearence_z)    #Example position
             bin_pose.orientation = self.default_gripper_orientation
+        waypoints.append(bin_pose)
+        print("Go to bin ")
         # self.request_pos(bin_pose,'right',self.right_group)
-        self.right_group.set_pose_target(bin_pose,end_effector_link="right_gripper")
-        plan = self.right_group.go(wait=True)
+        # self.right_group.set_pose_target(bin_pose,end_effector_link="right_gripper")
+        # plan = self.right_group.go(wait=True)
+        (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.right_group.execute(plan, wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets()   
-        print("Go to bin ")
         rospy.sleep(1)
+        waypoints = []
 
         
         #Drop Object
