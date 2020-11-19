@@ -76,14 +76,27 @@ class Mover:
         self.default_gripper_orientation = Quaternion(1.0,0.0,0.0,0.0) #Need to change this value
         
         #Soda Can default values
+        #For table, self.can_z = -0.12
+        # self.can_z = -0.1
+        # self.can_bin_x = 0.7
+        # self.can_bin_y = -0.1
+        ########################################
+        # VALUES FROM KAILEY'S VIDEO
         self.can_z = -0.1
-        self.can_bin_x = 0.7
-        self.can_bin_y = -0.1
+        self.can_bin_x = 0.6 
+        self.can_bin_y = 0.1
+        ##########################################
         
-        #Water bottle Default values
-        self.bottle_z = -0.1
-        self.bottle_bin_x = 0.8
-        self.bottle_bin_y = -0.35
+        # Bottle Default values
+        # self.bottle_z = -0.1
+        # self.bottle_bin_x = 0.8
+        # self.bottle_bin_y = -0.35
+        ########################################
+        # VALUES FROM KAILEY'S VIDEO
+        self.bottle_z = -0.025
+        self.bottle_bin_x = 0.6
+        self.bottle_bin_y = -0.65
+        ##########################################
         
         self.clearence_z = 0.15;  #Clearence Z Height
         # self.current_x = 0
@@ -107,12 +120,19 @@ class Mover:
         self.move_to_home()
         
         #Temporary Testing Values until vision service works
-        self.obj_x_list = [0.8, 0.7, 0.83, 0.75]
-        self.obj_y_list = [-0.3, -0.2, -0.1,-0.25]
-        self.obj_type_list = ["soda", "bottle", "soda", "bottle"]
+        # self.obj_x_list = [0.8, 0.7, 0.83, 0.75]
+        # self.obj_y_list = [-0.3, -0.2, -0.1,-0.25]
+        # self.obj_type_list = ["soda", "bottle", "soda", "bottle"]
+        ########################################
+        # VALUES FROM KAILEY'S VIDEO
+        # This is for the bottle&bin on the robot's right and can&bin both on robot's left (so easy)
+        self.obj_x_list = [0.8, 0.8]
+        self.obj_y_list = [-0.375, -0.25] 
+        self.obj_type_list = ["bottle", "soda"]
+        ##########################################
         self.objects_found =  True
         
-        rospy.sleep(10)
+        rospy.sleep(5)
 
 
 
@@ -225,7 +245,7 @@ class Mover:
         # self.right_group.clear_pose_targets()
         # print('Move to home Z height')
         
-
+        print("Moving to the home position")
         #Set pose for move to home x,y,z position
         home_pose = Pose()
         home_pose.position = Point(self.home_x,self.home_y,self.home_z)
@@ -236,7 +256,7 @@ class Mover:
         plan = self.right_group.go(wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets() 
-        print('Move to home')
+        print('At the home position')
         rospy.sleep(1)
  
 
@@ -250,7 +270,7 @@ class Mover:
 
         
     def move_to_object(self,obj_type,obj_x,obj_y):
-        
+        print("Moving to object perch position")
         #Move to object x,y position at clearence z height
         obj_pose = Pose()
         obj_pose.position = Point(obj_x,obj_y,self.clearence_z)    #Example position
@@ -261,10 +281,11 @@ class Mover:
         plan = self.right_group.go(wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets()
-        print("Move to object x-y")
+        print("At the object perch position")
         rospy.sleep(1)  
 
         #Move down in z to object height
+        print("Moving to the grasping position")
         obj_pose = Pose()
         if  obj_type == "soda":
             obj_pose.position = Point(obj_x,obj_y,self.can_z)    #Example position
@@ -275,25 +296,32 @@ class Mover:
             obj_pose.orientation = self.default_gripper_orientation
         
         # self.request_pos(obj_pose,'right',self.right_group)
-        self.right_group.set_pose_target(obj_pose, end_effector_link="right_gripper")
-        plan = self.right_group.go(wait=True)
+        # self.right_group.set_pose_target(obj_pose, end_effector_link="right_gripper")
+        # plan = self.right_group.go(wait=True)
+        ####################################################
+        # Instead of using the 'set_pose_target above, we're switching to cartesian path
+        waypoints = [obj_pose]
+        (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        waypoints = []
+
+        self.right_group.execute(plan, wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets()  
-        print("Move down to object")
+        print("At the grasping position")
         rospy.sleep(1)
 
     def grasp_object(self,obj_type):  
         
         #add/attach bottle to robot (don't technically need)
         if  obj_type == "soda":
-            self.right_gripper.command_position(65) # where 0=close 100=open
-            # self.right_gripper.close()  #Need to set close distance for bottle and can somehow  (There is a self.type = 'electric' in gripper.close() function we may need to use)
+            # self.right_gripper.command_position(65) #For both grippers at spots 2/4
+            self.right_gripper.command_position(50) #For one gripper at spot 3 and one gripper at 2/4
             rospy.sleep(1)
         else:
-            self.right_gripper.command_position(30) # where 0=close 100=open
-            # self.right_gripper.close()  #Need to set close distance for bottle and can somehow
+            # self.right_gripper.command_position(20) #For gripper at spots 2/4
+            self.right_gripper.command_position(0) #For one gripper at spot 3 and one gripper at 2/4
             rospy.sleep(1)
-        print("Close the gripper")
+        print("Closed the gripper")
         
         # if self.gripper_force == 0:   # or less than a certain value (bad grip)
         #     print('Object Grasp Failed')
@@ -314,11 +342,18 @@ class Mover:
         raised_pose.position = Point(obj_x,obj_y,self.clearence_z)  
         raised_pose.orientation = self.default_gripper_orientation
         # self.request_pos(raised_pose,'right',self.right_group)
-        self.right_group.set_pose_target(raised_pose,"right_gripper")
-        plan = self.right_group.go(wait=True)
+        # self.right_group.set_pose_target(raised_pose,"right_gripper")
+        # plan = self.right_group.go(wait=True)
+        ####################################################
+        # Instead of using the 'set_pose_target above, we're switching to cartesian path
+        waypoints = [raised_pose]
+        (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        self.right_group.execute(plan, wait=True)
+        waypoints = []
+
         self.right_group.stop()
         self.right_group.clear_pose_targets() 
-        print('Lift up')
+        print('Lifting object up')
         rospy.sleep(1) 
         
         #Move Object to corresponding bin
@@ -334,7 +369,7 @@ class Mover:
         plan = self.right_group.go(wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets()   
-        print("GO to bin ")
+        print("Go to bin ")
         rospy.sleep(1)
 
         
