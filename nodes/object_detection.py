@@ -15,7 +15,6 @@ bridge = CvBridge()
 cv_image = bridge.imgmsg_to_cv2(image_message, desired_encoding='passthrough')
 image_message = bridge.cv2_to_imgmsg(cv_image, encoding="passthrough")
 TODO
-
 """
 
 import rospy
@@ -37,8 +36,9 @@ class Detect():
     A holding class for the node's functions. See file level doc string for 
     more detailed information about the ROS API. 
     """
+
     def __init__(self):
-        # Identification Paramiters
+        # Identification Parameters
         self.can_diameter_min = 21       # [units are pixels]
         self.can_diameter_max = 26       # [units are pixels]
         self.bottle_diameter_min = 10    # [units are pixels]
@@ -62,8 +62,9 @@ class Detect():
         
         #self.setup_image_stream()
 
+
     def setup_image_stream(self):
-        """! Initialize the ros subscript to incomming images and CVbridges. 
+        """! Initialize the ros subscript to incoming images and CVbridges. 
         This is required for normal operations since this is how the node
         gets it's images for processing. However, during unit testing other
         means of loading images may be appropriate. 
@@ -74,13 +75,14 @@ class Detect():
                                     self.image_callback, queue_size=1)
         self.capture = cv.VideoCapture(2)  # TODO - which camera??
 
+
     def setup_services(self):
         """! Set up the the ros services provided by this node. 
         This should be called after all other setup has been performed to
         prevent invalid service calls.
         """
         rospy.loginfo("Setting up services")
-        board_service = rospy.Service('get_board_state', Board, self.get_board_state)
+        state_service = rospy.Service('get_board_state', Board, self.get_board_state)
 
 
     def set_default_image(self):
@@ -94,14 +96,14 @@ class Detect():
 
 
     def image_callback(self, image_message): 
-        """! Handle a new incomming image from the robot. 
+        """! Handle a new incoming image from the robot. 
         This function is responsible for processing the image into a an 
         OpenCV friendly format, and for storing it as a class variable.
          
         @param image_message, a ross Image message for processing. 
          
         """         
-        rospy.logdebug("Processing incomming image")               
+        rospy.logdebug("Processing incoming image")               
         try:
             cv_image = self.bridge.imgmsg_to_cv2(image_message,
                                     desired_encoding='passthrough')
@@ -117,7 +119,7 @@ class Detect():
         Currently incomplete 
         """
 
-        # This is just the script for testing, evertying here needs to change
+        # This is just the script for testing, everything here needs to change
         # Set local so no change during run
         img = self.img
         
@@ -141,7 +143,7 @@ class Detect():
         # if key & 0xFF == ord('q') or key == 27:
         #     cv.destroyAllWindows()
 
-        return  BoardResponse(objects)
+        return BoardResponse(objects)
       
 
     def detect_cans(self, image):
@@ -150,11 +152,12 @@ class Detect():
           Image (img) - the stored image.
         
         Returns:
-          Cans (list) - A list of can's state
-                       (type - CAN, sorted - False, locatoin)
+          Cans (list) - A list of cans' state
+                       (type - CAN, sorted - False, location)
         """
         rospy.loginfo("Detecting Cans")
         circles = self.detect_circles(image, self.can_diameter_min, self.can_diameter_max)
+        rospy.loginfo(f"circles = {circles}")
         cans = []
         for c in circles[0]:
             can = Object()
@@ -162,9 +165,9 @@ class Detect():
             can.sorted = False 
             can.location.x = c[0]
             can.location.y = c[1]
-            can.location.z = -1 #TODO: Impliment a decent vertical offset 
+            can.location.z = -1 #TODO: Implement a decent vertical offset 
             cans.append(can)
-        return(cans)
+        return cans
 
 
     def detect_bottles(self, image):
@@ -173,8 +176,8 @@ class Detect():
           Image (img) - the stored image.
         
         Returns:
-          Bottles (list) - A list of bottles's state
-                          (type - BOTTLE, sorted - False, locatoin)
+          Bottles (list) - A list of bottles' state
+                          (type - BOTTLE, sorted - False, location)
         """
         rospy.loginfo("Detecting Bottles")
         circles = self.detect_circles(image, self.bottle_diameter_min, self.bottle_diameter_max)
@@ -186,9 +189,9 @@ class Detect():
             bottle.sorted = False 
             bottle.location.x = c[0]
             bottle.location.y = c[1]
-            bottle.location.z = -1 #TODO: Impliment a decent vertical offset 
+            bottle.location.z = -1 #TODO: Implement a decent vertical offset 
             bottles.append(bottle)
-        return(bottles)
+        return bottles
 
 
     def detect_circles(self, image, min_dia = 10, max_dia = 30):
@@ -203,35 +206,35 @@ class Detect():
         """
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        ret, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
+        _, grey_thresh = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
 
         # Blur the image
-        grey = cv.medianBlur(grey, 5)
-        grey = cv.GaussianBlur(grey, (5,5), 0)
+        grey_med_blur = cv.medianBlur(grey_thresh, 5)
+        grey_gauss_blur = cv.GaussianBlur(grey_med_blur, (5,5), 0)
 
         # Run the algorithm, get the circles
-        rows = grey.shape[0]
-        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
+        rows = grey_gauss_blur.shape[0]
+        circles = cv.HoughCircles(grey_gauss_blur, cv.HOUGH_GRADIENT, 1, rows / 16, 
                                 param1 = 100, param2 = 30,
                                 minRadius = min_dia, maxRadius = max_dia)
-        return(circles) 
+        return circles
 
 
     def paint_circles(self, image, paint_image, color, min_dia, max_dia = 10):
         """! This function finds all the specified circles and paints them.
-        This function is for testing purpose only
+        It is for testing purpose only
         """         
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        ret, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
+        _, grey_thresh = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
 
         # Blur the image
-        grey = cv.medianBlur(grey, 5)
-        grey = cv.GaussianBlur(grey, (5,5), 0)
+        grey_med_blur = cv.medianBlur(grey_thresh, 5)
+        grey_gauss_blur = cv.GaussianBlur(grey_med_blur, (5,5), 0)
 
         # Run the algorithm, get the circles
-        rows = grey.shape[0]
-        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
+        rows = grey_gauss_blur.shape[0]
+        circles = cv.HoughCircles(grey_gauss_blur, cv.HOUGH_GRADIENT, 1, rows / 16, 
                                 param1 = 100, param2 = 30,
                                 minRadius = min_dia, maxRadius = max_dia)
 
@@ -244,8 +247,7 @@ class Detect():
                     cv.circle(paint_image, center, 1, (0, 100, 100), 3)
                     diameter = i[2]
                     cv.circle(paint_image, center, diameter, color, 3)
-
-        return(circles, paint_image)
+        return circles, paint_image
 
 
 def main():

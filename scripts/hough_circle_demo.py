@@ -1,5 +1,3 @@
-import pyrealsense2 as rs
-
 #!/usr/bin/env python3
 
 """! This script is a test of the object segmentation code for open CV.
@@ -63,7 +61,7 @@ try:
             # print(table_color)
             # print(image)
             # cv.imshow("test", image)
-            return(cv.subtract(image, table_color))
+            return cv.subtract(image, table_color)
 
 
         def paint_circles(image, paint_image, color, min_rad, max_rad = 10):
@@ -74,7 +72,7 @@ try:
             # cv.imshow("crop_img", crop_img)
             # Go to greyscale   
             grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
-            ret, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
+            _, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
             # cv.imshow("th3", grey)
 
             # Blur the image
@@ -101,7 +99,7 @@ try:
                     radius = i[2]
                     cv.circle(paint_image, center, radius, color, 3)
 
-            return(paint_image)
+            return paint_image
 
 
         # Find cans - blue
