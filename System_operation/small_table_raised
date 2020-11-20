@@ -48,7 +48,8 @@ class Mover:
         self.default_gripper_orientation = Quaternion(1.0, 0, 0, 0)
         
         #Soda Can default values
-        self.can_z = -0.12
+        # self.can_z = -0.12
+        self.can_z = -0.13
 
         self.can_bin_x = 0.2
         self.can_bin_y = -0.9
@@ -56,7 +57,8 @@ class Mover:
 
         
         #Water bottle Default values
-        self.bottle_z = -0.055
+        # self.bottle_z = -0.055
+        self.bottle_z = -0.07
 
         self.bottle_bin_x = 0.5
         self.bottle_bin_y = -0.9
@@ -75,9 +77,14 @@ class Mover:
         self.move_to_home()
 
         #Test values
-        self.obj_x_list = [0.75, 0.75, 0.65]
-        self.obj_y_list = [-0.2, -0.5, -0.5] 
-        self.obj_type_list = ["soda", "bottle", "soda"]
+        self.obj_x_list = [0.8, 0.8, 0.55, 0.55]
+        self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
+        self.obj_type_list = ["soda", "soda", "bottle", "soda"]
+
+        ### THESE VALUES WORKED ON 11/20
+        # self.obj_x_list = [0.75, 0.75, 0.65, 0.65]
+        # self.obj_y_list = [-0.2, -0.5, -0.5, -0.2] 
+        # self.obj_type_list = ["soda", "bottle", "soda", "soda"]
 
         # self.obj_x_list = [0.75]
         # self.obj_y_list = [-0.3] 
