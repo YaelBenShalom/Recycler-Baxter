@@ -1,0 +1,7 @@
+<launch>
+  <!--Node for trajectories, used with MoveIt -->
+  <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py" />
+  <include file="$(find baxter_moveit_config)/launch/baxter_grippers.launch"/>
+  <!--Baxter_mover node-->
+  <node name ="test" pkg = "final-project-scott-s-bot-for-tots" type = "test" />
+</launch>
