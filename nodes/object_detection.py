@@ -56,7 +56,7 @@ class Detect():
         self.image_directory = path
         self.image_name = "bottle_top_1.jpg"
     
-        #TODO: figure oout correct commenting style 
+        #TODO: figure out correct commenting style 
         ##! Stores the current image. 
         self.set_default_image()
         
@@ -113,7 +113,7 @@ class Detect():
 
 
     def get_board_state(self, srv):
-        """! Run object detection to produce board state from last stored image.
+        """! Run object detection to produce board state from stored image.
         Currently incomplete 
         """
 
@@ -145,8 +145,14 @@ class Detect():
       
 
     def detect_cans(self, image):
-        """! This is temporary and for testign only
-        """ # TODO
+        """! This function detects cans located on the table.
+        Inputs:
+          Image (img) - the stored image.
+        
+        Returns:
+          Cans (list) - A list of can's state
+                       (type - CAN, sorted - False, locatoin)
+        """
         rospy.loginfo("Detecting Cans")
         circles = self.detect_circles(image, self.can_diameter_min, self.can_diameter_max)
         cans = []
@@ -162,26 +168,39 @@ class Detect():
 
 
     def detect_bottles(self, image):
-        """! This is temporary and for testing only
-        """ # TODO
+        """! This function detects bottles located on the table.
+        Inputs:
+          Image (img) - the stored image.
+        
+        Returns:
+          Bottles (list) - A list of bottles's state
+                          (type - BOTTLE, sorted - False, locatoin)
+        """
         rospy.loginfo("Detecting Bottles")
         circles = self.detect_circles(image, self.bottle_diameter_min, self.bottle_diameter_max)
         rospy.loginfo(f"circles = {circles}")
-        cans = []
+        bottles = []
         for c in circles[0]:
-            can = Object()
-            can.type = self.BOTTLE
-            can.sorted = False 
-            can.location.x = c[0]
-            can.location.y = c[1]
-            can.location.z = -1 #TODO: Impliment a decent vertical offset 
-            cans.append(can)
-        return(cans)
+            bottle = Object()
+            bottle.type = self.BOTTLE
+            bottle.sorted = False 
+            bottle.location.x = c[0]
+            bottle.location.y = c[1]
+            bottle.location.z = -1 #TODO: Impliment a decent vertical offset 
+            bottles.append(bottle)
+        return(bottles)
 
 
-    def detect_circles(self, image, min_rad = 10, max_rad = 30):
-        """! Also temporary and for testing
-        """  # TODO
+    def detect_circles(self, image, min_dia = 10, max_dia = 30):
+        """! This function detects circle pattern in the stored image 
+        Inputs:
+          Image (img) - the stored image.
+          min_dia (int) - the object minimum diameter
+          max_dia (int) - the object maximum diameter
+
+        Returns:
+          circles (list) - A list of the circles in the image
+        """
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         ret, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
@@ -194,16 +213,14 @@ class Detect():
         rows = grey.shape[0]
         circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
                                 param1 = 100, param2 = 30,
-                                minRadius = min_rad, maxRadius = max_rad)
+                                minRadius = min_dia, maxRadius = max_dia)
         return(circles) 
 
 
-    def paint_circles(self, image, paint_image, color, min_rad, max_rad = 10):
+    def paint_circles(self, image, paint_image, color, min_dia, max_dia = 10):
         """! This function finds all the specified circles and paints them.
-        Yep, also for testing only
-        """ 
-        # TODO: Commeint or delete
-        
+        This function is for testing purpose only
+        """         
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         ret, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
@@ -216,7 +233,7 @@ class Detect():
         rows = grey.shape[0]
         circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
                                 param1 = 100, param2 = 30,
-                                minRadius = min_rad, maxRadius = max_rad)
+                                minRadius = min_dia, maxRadius = max_dia)
 
         # Paint the circles onto our paint image
         if circles is not None: 
@@ -225,8 +242,8 @@ class Detect():
                     print ("circle: ", i)
                     center = (i[0], i[1])
                     cv.circle(paint_image, center, 1, (0, 100, 100), 3)
-                    radius = i[2]
-                    cv.circle(paint_image, center, radius, color, 3)
+                    diameter = i[2]
+                    cv.circle(paint_image, center, diameter, color, 3)
 
         return(circles, paint_image)
 

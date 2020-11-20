@@ -40,7 +40,7 @@ try:
         img = np.asanyarray(color_frame.get_data())
         height, width = img.shape[:2]
         img = cv.resize(img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
-        img = img[390:790, 680:1080]
+        # img = img[390:790, 680:1080]
         # Check the file name was right
         if img is None: 
             sys.exit("""could not read the image. Make sure you are running 
@@ -108,7 +108,7 @@ try:
         paint_image = paint_circles(img, img, (0, 0, 255), 21, 26)
 
         # Find bottles - red
-        paint_image = paint_circles(img, paint_image, (255, 0, 0), 10, 15)
+        paint_image = paint_circles(img, paint_image, (255, 0, 0), 10, 16)
 
         # Find bottle tabs - green
         # paint_image = paint_circles(img, paint_image, (0, 255, 0), 6, max_rad = 10)
@@ -116,7 +116,7 @@ try:
         remove_table(img)
 
         # Show image
-        cv.namedWindow('detected_circles', cv.WINDOW_AUTOSIZE)
+        cv.namedWindow("detected_circle", cv.WINDOW_AUTOSIZE)
         cv.imshow("detected_circles", paint_image)
         key = cv.waitKey(1)
 
