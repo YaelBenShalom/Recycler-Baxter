@@ -10,10 +10,6 @@ Publishes:
 Services:
     Nothing Presently.
 
-
-bridge = CvBridge()
-cv_image = bridge.imgmsg_to_cv2(image_message, desired_encoding='passthrough')
-image_message = bridge.cv2_to_imgmsg(cv_image, encoding="passthrough")
 TODO
 """
 
@@ -57,18 +53,67 @@ class Detect():
         # self.ERROR = rospy.get_param("ERROR")       # Initializing object type - error
         # self.BOTTLE = rospy.get_param("BOTTLE")     # Initializing object type - bottle
         # self.CAN = rospy.get_param("CAN")           # Initializing object type - can
-
-        # Info for default image 
-        self.rospack = rospkg.RosPack()
-        path = self.rospack.get_path(name = 'can_sort') + '/camera_images/11.10.20/'
-        self.image_directory = path
-        self.image_name = "bottle_top_1.jpg"
-    
-        #TODO: figure out correct commenting style 
-        ##! Stores the current image. 
-        self.set_default_image()
         
-        #self.setup_image_stream()
+        # self.R = rospy.get_param("~pub_freq")           # initializing the frequency at which to publish messages
+        self.rate = rospy.Rate(100)
+        self.detection_mode = True
+
+        # # Info for default image 
+        # self.rospack = rospkg.RosPack()
+        # path = self.rospack.get_path(name = 'can_sort') + '/camera_images/11.10.20/'
+        # self.image_directory = path
+        # self.image_name = "bottle_top_1.jpg"
+    
+        # #TODO: figure out correct commenting style 
+        # ##! Stores the current image. 
+        # self.set_default_image()
+        
+        # #self.setup_image_stream()
+
+
+        # Configure color stream
+        pipeline = rs.pipeline()
+        config = rs.config()
+        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+
+        # Recording video to bagfile
+        # config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
+        config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
+
+        # Start streaming
+        pipeline.start(config)
+        try:
+            while True:
+                # Wait for a coherent color frame
+                frames = pipeline.wait_for_frames()
+                color_frame = frames.get_color_frame()
+                if not color_frame:
+                    continue
+
+                # Convert image to numpy array
+                self.img = np.asanyarray(color_frame.get_data())
+                height, width = self.img.shape[:2]
+                self.img = cv.resize(self.img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
+                # self.img = self.img[390:790, 680:1080]
+                # Check the file name was right
+                if self.img is None: 
+                    sys.exit("""could not read the image. Make sure you are running 
+                    the script from the /scripts folder.""")
+
+                # Show image
+                cv.namedWindow("detected_circle", cv.WINDOW_AUTOSIZE)
+                cv.imshow("detected_circles", self.img)
+                key = cv.waitKey(1)
+
+                # Press esc or 'q' to close the image window
+                if key & 0xFF == ord('q') or key == 27:
+                            cv.destroyAllWindows()
+                            break
+
+        finally:
+            # Stop streaming
+            pipeline.stop()
 
 
     def setup_image_stream(self):
@@ -90,17 +135,18 @@ class Detect():
         prevent invalid service calls.
         """
         rospy.loginfo("Setting up services")
+        rospy.wait_for_service('get_board_state')
         state_service = rospy.Service('get_board_state', Board, self.get_board_state)
 
 
-    def set_default_image(self):
-        """! Load a default image from the local files. Used for testing. 
-        """  
-        # Read in the image
-        self.img = cv.imread(self.image_directory + self.image_name)
-        # Check the file name was right
-        if self.img is None: 
-            rospy.logwarn("WARNING: could not read default image")
+    # def set_default_image(self):
+    #     """! Load a default image from the local files. Used for testing. 
+    #     """  
+    #     # Read in the image
+    #     self.img = cv.imread(self.image_directory + self.image_name)
+    #     # Check the file name was right
+    #     if self.img is None: 
+    #         rospy.logwarn("WARNING: could not read default image")
 
 
     def image_callback(self, image_message): 
@@ -257,12 +303,21 @@ class Detect():
         return circles, paint_image
 
 
+    def run_detection(self):
+        while not rospy.is_shutdown():
+            rospy.logdebug(f"Run Message")
+            if self.detection_mode:
+                self.setup_services()
+            else:
+                rospy.logdebug(f"In pause mode")
+            self.rate.sleep()
+
 def main():
     """ The main() function """
-    rospy.init_node('object_detection', log_level = rospy.DEBUG)
+    rospy.init_node("object_detection", log_level = rospy.DEBUG)
     rospy.logdebug(f"classification node started")
     detect = Detect()
-    detect.setup_services()
+    detect.run_detection()
     rospy.spin()
 
     cv.destroyAllWindows()
