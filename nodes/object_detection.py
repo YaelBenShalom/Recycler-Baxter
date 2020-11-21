@@ -135,8 +135,7 @@ class Detect():
         prevent invalid service calls.
         """
         rospy.loginfo("Setting up services")
-        rospy.wait_for_service('get_board_state')
-        state_service = rospy.Service('get_board_state', Board, self.get_board_state)
+        state = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
 
 
     # def set_default_image(self):
@@ -176,6 +175,10 @@ class Detect():
         # Set local so no change during run
         img = self.img
         
+        rospy.loginfo("calling service")
+        rospy.wait_for_service('get_board_state')
+        state_service = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
+
         objects = [] 
         objects.extend(self.detect_cans(img))
         objects.extend(self.detect_bottles(img))
@@ -308,9 +311,13 @@ class Detect():
             rospy.logdebug(f"Run Message")
             if self.detection_mode:
                 self.setup_services()
+                self.rate.sleep()
+                cv.destroyAllWindows()
             else:
                 rospy.logdebug(f"In pause mode")
             self.rate.sleep()
+        
+
 
 def main():
     """ The main() function """
@@ -320,8 +327,7 @@ def main():
     detect.run_detection()
     rospy.spin()
 
-    cv.destroyAllWindows()
-
+    
 
 if __name__ == '__main__':
     try:
