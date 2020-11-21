@@ -1,0 +1,15 @@
+<launch>
+   <arg name="Mover" default="True"/>
+   <arg name="object_detection" default="False"/>
+
+   <rosparam command="load" file="$(find can_sort)/config/sort.yaml" />
+
+   <group if="$(arg Mover)">
+   <node name="Mover" pkg="can_sort" type="Mover" />
+   </group>
+
+   <group if="$(arg object_detection)">
+   <node name="object_detection" pkg="can_sort" type="object_detection" />
+   </group>
+
+</launch>

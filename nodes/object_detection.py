@@ -39,17 +39,25 @@ class Detect():
 
     def __init__(self):
         # Identification Parameters
+        # TODO - replace with yaml parameters
         self.can_diameter_min = 21       # [units are pixels]
         self.can_diameter_max = 26       # [units are pixels]
         self.bottle_diameter_min = 10    # [units are pixels]
         self.bottle_diameter_max = 15    # [units are pixels]
+        # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
+        # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
+        # self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
+        # self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")       # Initializing bottles maximum diameter [pixels]
 
         # Object Type Definitions
-        #TODO: Move these to a common library or param server.
-        self.ERROR = -1
-        self.BOTTLE = 0
-        self.CAN = 1
-        
+        # TODO - replace with yaml parameters
+        self.ERROR = -1     # Initializing object type - error
+        self.BOTTLE = 0     # Initializing object type - bottle
+        self.CAN = 1        # Initializing object type - can
+        # self.ERROR = rospy.get_param("ERROR")       # Initializing object type - error
+        # self.BOTTLE = rospy.get_param("BOTTLE")     # Initializing object type - bottle
+        # self.CAN = rospy.get_param("CAN")           # Initializing object type - can
+
         # Info for default image 
         self.rospack = rospkg.RosPack()
         path = self.rospack.get_path(name = 'can_sort') + '/camera_images/11.10.20/'
@@ -101,7 +109,6 @@ class Detect():
         OpenCV friendly format, and for storing it as a class variable.
          
         @param image_message, a ross Image message for processing. 
-         
         """         
         rospy.logdebug("Processing incoming image")               
         try:
