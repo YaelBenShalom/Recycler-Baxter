@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.0.2)
 project(can_sort)
 
 find_package(catkin REQUIRED COMPONENTS
+    baxter_core_msgs
+    baxter_interface
     geometry_msgs
     message_generation
     moveit_msgs
@@ -28,6 +30,8 @@ generate_messages(
 
 catkin_package(
    CATKIN_DEPENDS
+   baxter_core_msgs
+   baxter_interface
    geometry_msgs
    message_runtime
    moveit_msgs
@@ -42,6 +46,7 @@ catkin_install_python(
   PROGRAMS
   nodes/object_detection.py
   nodes/Mover.py
+  System_operation/small_table_raised
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

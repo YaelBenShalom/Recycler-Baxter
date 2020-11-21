@@ -48,8 +48,9 @@ class Mover:
         self.default_gripper_orientation = Quaternion(1.0, 0, 0, 0)
         
         #Soda Can default values
-        # self.can_z = -0.12
-        self.can_z = -0.13
+        # self.can_z = -0.12 #For the OG table
+        # self.can_z = -0.13 #For the small table on top of boxes
+        self.can_z = -0.11 #For the 2nd table
 
         self.can_bin_x = 0.2
         self.can_bin_y = -0.9
@@ -57,8 +58,9 @@ class Mover:
 
         
         #Water bottle Default values
-        # self.bottle_z = -0.055
-        self.bottle_z = -0.07
+        # self.bottle_z = -0.055 #For the OG table
+        # self.bottle_z = -0.07 #For the small table on top of boxes
+        self.bottle_z = -0.05 #For the OG table
 
         self.bottle_bin_x = 0.5
         self.bottle_bin_y = -0.9
@@ -72,23 +74,41 @@ class Mover:
         
         # #Add table
         self.add_box()
+
+        self.initPos()
         
         #move to home
-        self.move_to_home()
+        # self.move_to_home()
 
         #Test values
-        self.obj_x_list = [0.8, 0.8, 0.55, 0.55]
-        self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
-        self.obj_type_list = ["soda", "soda", "bottle", "soda"]
+        # x1 = x2 = 0.8
+        # x1 = 0.8
+        # x2 = 0.8
+        # x3 = x4 = 0.55
+        # y1 = y4 = -0.1
+        # y2 = y3 = -0.5
+        # self.obj_x_list = [x2]
+        # self.obj_y_list = [y2] 
+        # self.obj_type_list = ["soda"]
+
+        x1 = 0.8
+        x2 = 0.79
+        x3 = x4 = 0.55
+        y1 = y4 = -0.1
+        y2 = y3 = -0.5
+        self.obj_x_list = [x1, x2, x3, x4]
+        self.obj_y_list = [y1, y2, y3, y4] 
+        self.obj_type_list = ["bottle", "soda", "soda", "soda"]
 
         ### THESE VALUES WORKED ON 11/20
+
+        # self.obj_x_list = [0.8, 0.79, 0.55, 0.55]
+        # self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
+        # self.obj_type_list = ["soda", "soda", "bottle", "soda"]
+
         # self.obj_x_list = [0.75, 0.75, 0.65, 0.65]
         # self.obj_y_list = [-0.2, -0.5, -0.5, -0.2] 
         # self.obj_type_list = ["soda", "bottle", "soda", "soda"]
-
-        # self.obj_x_list = [0.75]
-        # self.obj_y_list = [-0.3] 
-        # self.obj_type_list = ["soda"]
         self.objects_found =  True
         rospy.sleep(1)
 
@@ -148,6 +168,21 @@ class Mover:
         self.bin2_pose.pose.orientation.w = 1.0
         #Dimension
         self.scene.add_box(self.bin2_name,self.bin2_pose,size =(0.3,0.52,0.77))
+
+    def initPos(self):
+        # move both arms to a good position before the initial poses
+        right = baxter_interface.Limb('right')
+
+        rcmd = {"right_e0":0.584830175381314,
+                "right_e1":1.601475942552372,
+                "right_s0":0.12732040539448933,
+                "right_s1":-1.19573802415668,
+                "right_w0":2.923000391315656,
+                "right_w1":-1.2225826879446748,
+                "right_w2":-0.033364082136507746}
+
+
+        right.move_to_joint_positions(rcmd)
 
     def move_to_home(self):  #Move to home position  
         # self.init_pos()

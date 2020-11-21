@@ -21,7 +21,7 @@
     <build_depend>std_msgs</build_depend>
     <build_depend>message_generation</build_depend>
     <build_depend>baxter_core_msgs</build_depend>
-    <build_depend>baxter_interface</build_depend>
+    <!-- <build_depend>baxter_interface</build_depend> -->
     <!-- Dependencies needed to build against this package --> 
     <build_export_depend>rostest</build_export_depend>
     <build_export_depend>moveit_msgs</build_export_depend>
@@ -29,10 +29,13 @@
     <build_export_depend>std_msgs</build_export_depend>
     <build_export_depend>rospy</build_export_depend>
     <build_export_depend>roscpp</build_export_depend>
-    <build_export_depend>baxter_core_msgs</build_export_depend>    
+    <build_export_depend>baxter_core_msgs</build_export_depend>
     <!-- Dependencies required at runtime -->
     <exec_depend>rviz</exec_depend>
     <exec_depend>message_runtime</exec_depend>
+    <exec_depend>baxter_moveit_config</exec_depend>
+
+    <depend>baxter_interface</depend>
     
     <test_depend>rostest</test_depend>
 
