@@ -56,6 +56,7 @@ catkin_install_python(
   nodes/object_detection.py
   nodes/Mover.py
   System_operation/small_table_raised
+  System_operation/test_vision
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

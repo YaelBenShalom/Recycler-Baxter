@@ -39,7 +39,7 @@ class Detect():
         self.can_diameter_min = 21       # [units are pixels]
         self.can_diameter_max = 26       # [units are pixels]
         self.bottle_diameter_min = 10    # [units are pixels]
-        self.bottle_diameter_max = 17    # [units are pixels]
+        self.bottle_diameter_max = 16    # [units are pixels]
         # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
         # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
         # self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]

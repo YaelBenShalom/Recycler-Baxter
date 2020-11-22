@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+
 import sys
 import rospy
 import numpy as np
@@ -12,18 +13,23 @@ import baxter_interface
 import std_msgs.msg
 import cv2
 import cv_bridge 
+from subprocess import call
 from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
-from baxter_core_msgs.msg import EndEffectorState 
-from baxter_core_msgs.srv import SolvePositionIK, SolvePositionIKRequest
+from baxter_core_msgs.msg import EndEffectorState
 from moveit_commander import MoveGroupCommander
 from baxter_interface import Gripper, CHECK_VERSION
 from moveit_commander import RobotCommander
 from numpy import result_type
+from can_sort.msg import Object
+from can_sort.srv import Board, BoardResponse
+
 
 
 class Mover:
     def __init__(self):
         '''Initialize environment'''
+
+        #set planning time
     
         #Initialized baxter
         baxter_interface.robot_enable.RobotEnable()
@@ -54,6 +60,7 @@ class Mover:
 
         self.can_bin_x = 0.2
         self.can_bin_y = -0.9
+        # self.can_bin_x = 0.2
         # Can bin is on the robot's left
 
         
@@ -64,44 +71,40 @@ class Mover:
 
         self.bottle_bin_x = 0.5
         self.bottle_bin_y = -0.9
+        # self.bottle_bin_x = 0.5 #OG
         # Bottle bin is on the robot's right
         
         self.clearence_z = 0.2;  #Clearence Z Height (to clear bottle)
         
         self.home_x = 0.65
-        self.home_y = -0.4
+        # self.home_y = -0.4
+        self.home_y = -0.45
         self.home_z = self.clearence_z
+
+        self.obj_type_list = []
+        self.obj_x_list = []
+        self.obj_y_list = []
         
-        # #Add table
+        #Call inital functions
+        # self.right_group.set_planning_time(seconds = 15)
+        # retime_trajectory() 
         self.add_box()
+        self.get_image() 
+        self.initialize_pos()
 
-        self.initPos()
-        
-        #move to home
-        # self.move_to_home()
+        # call(["rosnode", "kill", "object_detection"])
 
-        #Test values
-        # x1 = x2 = 0.8
+        # Hard coded values, works without vision
         # x1 = 0.8
-        # x2 = 0.8
+        # x2 = 0.79
         # x3 = x4 = 0.55
         # y1 = y4 = -0.1
         # y2 = y3 = -0.5
-        # self.obj_x_list = [x2]
-        # self.obj_y_list = [y2] 
-        # self.obj_type_list = ["soda"]
-
-        x1 = 0.8
-        x2 = 0.79
-        x3 = x4 = 0.55
-        y1 = y4 = -0.1
-        y2 = y3 = -0.5
-        self.obj_x_list = [x1, x2, x3, x4]
-        self.obj_y_list = [y1, y2, y3, y4] 
-        self.obj_type_list = ["bottle", "soda", "soda", "soda"]
+        # self.obj_x_list = [x1, x2, x3, x4]
+        # self.obj_y_list = [y1, y2, y3, y4] 
+        # self.obj_type_list = ["bottle", "soda", "bottle", "soda"]
 
         ### THESE VALUES WORKED ON 11/20
-
         # self.obj_x_list = [0.8, 0.79, 0.55, 0.55]
         # self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
         # self.obj_type_list = ["soda", "soda", "bottle", "soda"]
@@ -169,8 +172,44 @@ class Mover:
         #Dimension
         self.scene.add_box(self.bin2_name,self.bin2_pose,size =(0.3,0.52,0.77))
 
-    def initPos(self):
-        # move both arms to a good position before the initial poses
+    def get_image(self):
+        # move arm to a good position before the initial poses
+        right = baxter_interface.Limb('right')
+
+        rcmd = {"right_e0":0.07593204900032798,
+                "right_e1":1.3479856173543072,
+                "right_s0":-0.5629709491539469,
+                "right_s1":-0.9211554631251909, 
+                "right_w0":3.0104372962251245,
+                "right_w1":-1.0971797585350422,
+                "right_w2":-0.09088836168221076}
+
+        right.move_to_joint_positions(rcmd)
+
+        # Insert picture stuff here
+        self.get_obj_pos = rospy.ServiceProxy('board_state', Board)
+        self.object_listy = self.get_obj_pos(use_real = True)
+        print(f" found {len(self.object_listy.objects)} objects")
+
+        # self.obj_x_list = [0.8, 0.79, 0.55, 0.55]
+        # self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
+        # self.obj_type_list = ["soda", "soda", "bottle", "soda"]
+
+        for item in self.object_listy.objects:
+                self.obj_x_list.append(item.location.x)
+                self.obj_y_list.append(item.location.y)
+                if item.type == 0:
+                    self.obj_type_list.append("bottle")
+                else:
+                    self.obj_type_list.append("soda")
+        
+        print(f"x list {self.obj_x_list}")
+        print(f"y list {self.obj_y_list}")
+        print(f"type list is {self.obj_type_list}")
+        rospy.sleep(2)
+
+    def initialize_pos(self):
+        # move arm to a good position before the initial poses
         right = baxter_interface.Limb('right')
 
         rcmd = {"right_e0":0.584830175381314,
@@ -216,18 +255,18 @@ class Mover:
 
         #Move down in z to object height
         print("Moving to the perch position")
-        obj_pose = Pose()
+        self.obj_pose = Pose()
         if  obj_type == "soda":
-            obj_pose.position = Point(obj_x,obj_y,self.can_z)    #Example position
-            obj_pose.orientation = self.default_gripper_orientation
+            self.obj_pose.position = Point(obj_x,obj_y,self.can_z)    #Example position
+            self.obj_pose.orientation = self.default_gripper_orientation
     
             mid_pose = Pose()
             mid_pose.position = Point(obj_x,obj_y,(self.can_z + 0.05)) 
             mid_pose.orientation = self.default_gripper_orientation
 
         else:
-            obj_pose.position = Point(obj_x,obj_y,self.bottle_z)    #Example position
-            obj_pose.orientation = self.default_gripper_orientation
+            self.obj_pose.position = Point(obj_x,obj_y,self.bottle_z)    #Example position
+            self.obj_pose.orientation = self.default_gripper_orientation
 
             mid_pose = Pose()
             mid_pose.position = Point(obj_x,obj_y,(self.bottle_z + 0.05)) 
@@ -242,7 +281,7 @@ class Mover:
         rospy.sleep(1)
         waypoints = []
 
-        waypoints.append(obj_pose)
+        waypoints.append(self.obj_pose)
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
@@ -283,6 +322,11 @@ class Mover:
 
         waypoints.append(mid_pose)
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
+        # self.right_group.retime_trajectory(ref_state_in = self.obj_pose, traj_in = plan, velocity_scaling_factor = 1.0, acceleration_scaling_factor = 1.0, algorithm = "iterative_time_parameterization")
+        #allowed executition duration scaling
+        #allowed goal duration margin
+        #fork baxter move it config
+        #trajectory_execution.launch
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets() 
@@ -292,7 +336,8 @@ class Mover:
         #Move Object to corresponding bin
         bin_pose = Pose()
         if  obj_type == "soda":
-            bin_pose.position = Point(self.can_bin_x,self.can_bin_y,self.clearence_z)    #Example position
+            bin_pose.position = Point(self.can_bin_x,self.can_bin_y,self.clearence_z)
+            # bin_pose.position = Point(self.bottle_bin_x,self.bottle_bin_y,self.clearence_z) 
             bin_pose.orientation =  self.default_gripper_orientation
         else:
             bin_pose.position = Point(self.bottle_bin_x,self.bottle_bin_y,self.clearence_z)    #Example position

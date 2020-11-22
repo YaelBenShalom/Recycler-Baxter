@@ -6,20 +6,25 @@
 
   <!--Node for trajectories, used with MoveIt -->
   <group if="$(arg Mover)">
-     <node name="Mover" pkg="can_sort" type="small_table_raised" />
+     <node name="Mover" pkg="can_sort" type="small_table_raised" output = "screen"/>
   <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py" />
   </group>
 
   <!--Node for objectdetection, false by default (used for CV testing) -->
    <group if="$(arg object_detection)">
-   <node name="object_detection" pkg="can_sort" type="object_detection" />
+   <node name="object_detection" pkg="can_sort" type="object_detection.py" />
    </group>
    
   <include file="$(find baxter_moveit_config)/launch/baxter_grippers.launch">
    <arg name = "right_electric_gripper" value = "True"/>
    <arg name = "left_electric_gripper" value = "True"/>
   </include>
+
+  <include file = "$(find baxter_moveit_config)/launch/trajectory_execution.launch">
+      <param name="trajectory_execution/allowed_execution_duration_scaling" value="50.0"/> <!-- default 1.5 -->
+      <param name="trajectory_execution/allowed_goal_duration_margin" value="50.0"/> <!-- default 1.0 -->
+  </include>
   
   <!--Baxter_mover node-->
-  <node name ="test" pkg = "final-project-scott-s-bot-for-tots" type = "test" />
+  <!-- <node name ="test" pkg = "final-project-scott-s-bot-for-tots" type = "test" /> -->
 </launch>
