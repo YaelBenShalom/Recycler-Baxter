@@ -74,6 +74,12 @@ class Detect():
         """! Process a new incoming image from the realsense. 
         This function is responsible for processing the image into a an 
         OpenCV friendly format, and for storing it as a class variable.
+        Inputs:
+          None
+        
+        Returns:
+          Showing the circled image.
+          Returns nothing. 
         """    
         # Configure color stream
         pipeline = rs.pipeline()
@@ -82,7 +88,7 @@ class Detect():
 
         # Recording video to bagfile
         config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
-        # config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
+        # config.enable_device_from_file("bagfiles/camera_video")  # Uncomment this if you want to work of saved bagfile
 
         # Start streaming
         pipeline.start(config)
@@ -162,8 +168,10 @@ class Detect():
             can = Object()
             can.type = self.CAN
             can.sorted = False 
-            can.location.x = -0.00137634*c[1] + 1.45536
-            can.location.y = -0.00138495*c[0] + 1.0
+            # can.location.x = c[1]
+            # can.location.y = c[0]
+            can.location.x = -0.001286185*c[1] + 1.396265
+            can.location.y = -0.001329845*c[0] + 0.9717295
             can.location.z = -1 #TODO: Implement a decent vertical offset 
             cans.append(can)
 
@@ -187,8 +195,10 @@ class Detect():
             bottle = Object()
             bottle.type = self.BOTTLE
             bottle.sorted = False 
-            bottle.location.x = -0.00137634*c[1] + 1.45536
-            bottle.location.y = -0.00138495*c[0] + 1.0
+            # bottle.location.x = c[1]
+            # bottle.location.y = c[0]
+            bottle.location.x = -0.001286185*c[1] + 1.396265
+            bottle.location.y = -0.001329845*c[0] + 0.9717295
             bottle.location.z = -1 #TODO: Implement a decent vertical offset 
             bottles.append(bottle)
             
@@ -256,10 +266,10 @@ def main():
     rospy.init_node("object_detection", log_level = rospy.DEBUG)
     rospy.logdebug(f"classification node started")
     detect = Detect()
-    while not rospy.is_shutdown():
-        rospy.logdebug(f"Starting detection")
-        detect.image_processing()
-        break
+    # while not rospy.is_shutdown():
+    #     rospy.logdebug(f"Starting detection")
+    detect.image_processing()
+        # break
     rospy.spin()
 
     
