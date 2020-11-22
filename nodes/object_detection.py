@@ -162,8 +162,8 @@ class Detect():
             can = Object()
             can.type = self.CAN
             can.sorted = False 
-            can.location.x = c[0]
-            can.location.y = c[1]
+            can.location.x = -0.00137634*c[1] + 1.45536
+            can.location.y = -0.00138495*c[0] + 1.0
             can.location.z = -1 #TODO: Implement a decent vertical offset 
             cans.append(can)
 
@@ -187,8 +187,8 @@ class Detect():
             bottle = Object()
             bottle.type = self.BOTTLE
             bottle.sorted = False 
-            bottle.location.x = c[0]
-            bottle.location.y = c[1]
+            bottle.location.x = -0.00137634*c[1] + 1.45536
+            bottle.location.y = -0.00138495*c[0] + 1.0
             bottle.location.z = -1 #TODO: Implement a decent vertical offset 
             bottles.append(bottle)
             
@@ -259,6 +259,7 @@ def main():
     while not rospy.is_shutdown():
         rospy.logdebug(f"Starting detection")
         detect.image_processing()
+        break
     rospy.spin()
 
     
