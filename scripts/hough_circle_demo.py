@@ -107,9 +107,6 @@ try:
         # Find bottles - red
         paint_image = paint_circles(img, paint_image, (255, 0, 0), 10, 16)
 
-        # Find bottle tabs - green
-        # paint_image = paint_circles(img, paint_image, (0, 255, 0), 6, max_rad = 10)
-
         remove_table(img)
 
         # Show image

@@ -20,9 +20,18 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-#add_service_files(
-#    FILES 
-#)
+## Generate messages in the 'msg' folder
+add_message_files(
+    FILES
+    Object.msg
+ )
+
+## Generate services in the 'srv' folder
+add_service_files(
+    FILES 
+    Board.srv
+
+)
 
 generate_messages(
     DEPENDENCIES geometry_msgs moveit_msgs std_msgs
