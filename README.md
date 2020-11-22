@@ -10,7 +10,11 @@
 
 
 ## Project Overview
-In this project, we programmed a Rethink Baxter robot to sort bottles and cans located in front of it, ant throw them into separate recycle bins. We used computer vision to detect and locate the variety of randomly placed bottles and cans, and used inverse kinematics to control the robot.
+In this project, we programmed a Rethink Baxter robot to sort bottles and cans located in front of it, ant throw them into separate recycle bins. We used computer vision to detect and locate the variety of randomly placed bottles and cans, and used MoveIt to control the robot.
+
+The Baxter in action:
+
+![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/tree/master/videos/Baxter_sorting.gif)
 
 
 ## Installation
