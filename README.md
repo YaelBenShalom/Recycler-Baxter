@@ -14,7 +14,7 @@ In this project, we programmed a Rethink Baxter robot to sort bottles and cans l
 
 The Baxter in action:
 
-![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/tree/master/videos/Baxter_sorting.gif)
+![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/videos/Baxter_sorting.gif)
 
 
 ## Installation
