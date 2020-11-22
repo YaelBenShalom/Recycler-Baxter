@@ -68,7 +68,7 @@ def paint_circles(image, paint_image, color, min_rad, max_rad = 10):
 
     return paint_image
 
-    
+
 # Configure color stream
 pipeline = rs.pipeline()
 config = rs.config()
@@ -119,8 +119,8 @@ try:
 
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('q') or key == 27:
-                    cv.destroyAllWindows()
-                    break
+            cv.destroyAllWindows()
+            break
 
 finally:
     # Stop streaming
