@@ -57,7 +57,7 @@ class Detect():
         # self.R = rospy.get_param("~pub_freq")           # initializing the frequency at which to publish messages
         self.rate = rospy.Rate(100)
         self.detection_mode = True
-
+        self.objects = []
         # # Info for default image 
         # self.rospack = rospkg.RosPack()
         # path = self.rospack.get_path(name = 'can_sort') + '/camera_images/11.10.20/'
@@ -69,58 +69,16 @@ class Detect():
         # self.set_default_image()
         
         # #self.setup_image_stream()
+
+        #initialize publisher
+        self.image_pub = rospy.Publisher('/image_out', Image, queue_size=1)
+        rospy.logdebug(f"Publisher initialized")
         
-        state = rospy.Service('get_board_state', Board, self.get_board_state)
+        #initialize service
+        self.state_srv = rospy.Service('board_state', Board, self.get_board_state)
+        rospy.logdebug(f"Service initialized")
 
-        # Configure color stream
-        pipeline = rs.pipeline()
-        config = rs.config()
-        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
-
-        # Recording video to bagfile
-        # config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
-        config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
-
-        # Start streaming
-        pipeline.start(config)
-        try:
-            while True:
-                # Wait for a coherent color frame
-                frames = pipeline.wait_for_frames()
-                color_frame = frames.get_color_frame()
-                if not color_frame:
-                    continue
-
-                # Convert image to numpy array
-                self.img = np.asanyarray(color_frame.get_data())
-                height, width = self.img.shape[:2]
-                self.img = cv.resize(self.img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
-                # self.img = self.img[390:790, 680:1080]
-                # Check the file name was right
-                if self.img is None: 
-                    sys.exit("""could not read the image. Make sure you are running 
-                    the script from the /scripts folder.""")
-
-                # Find cans - blue
-                paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), 21, 26)
-
-                # Find bottles - red
-                paint_image = self.paint_circles(self.img, paint_image, (255, 0, 0), 10, 16)
-
-                # Show image
-                cv.namedWindow("detected_circle", cv.WINDOW_AUTOSIZE)
-                cv.imshow("detected_circles", paint_image)
-                key = cv.waitKey(1)
-
-                # Press esc or 'q' to close the image window
-                if key & 0xFF == ord('q') or key == 27:
-                    cv.destroyAllWindows()
-                    break
-
-        finally:
-            # Stop streaming
-            pipeline.stop()
+        self.bridge = CvBridge()
 
 
     # def setup_image_stream(self):
@@ -136,19 +94,19 @@ class Detect():
     #     self.capture = cv.VideoCapture(2)  # TODO - which camera??
 
 
-    def setup_services(self):
-        """! Set up the the ros services provided by this node. 
-        This should be called after all other setup has been performed to
-        prevent invalid service calls.
-        """
-        rospy.logdebug(f"Setting up services")
-        rospy.wait_for_service('get_board_state')
-        # state = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
+    # def setup_services(self):
+    #     """! Set up the the ros services provided by this node. 
+    #     This should be called after all other setup has been performed to
+    #     prevent invalid service calls.
+    #     """
+    #     rospy.logdebug(f"Setting up services")
+    #     rospy.wait_for_service('get_board_state')
+    #     # state = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
 
-        # state_service = Board()
-        # state_service.objects = objects
-        # state(state_service.objects)
-        # rospy.sleep(1)
+    #     # state_service = Board()
+    #     # state_service.objects = objects
+    #     # state(state_service.objects)
+    #     # rospy.sleep(1)
 
     # def set_default_image(self):
     #     """! Load a default image from the local files. Used for testing. 
@@ -178,22 +136,78 @@ class Detect():
     #     (rows,cols,channels) = cv_image.shape
 
 
+    def image_processing(self):
+        """! Process a new incoming image from the realsense. 
+        This function is responsible for processing the image into a an 
+        OpenCV friendly format, and for storing it as a class variable.
+        """    
+        # Configure color stream
+        pipeline = rs.pipeline()
+        config = rs.config()
+        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+
+        # Recording video to bagfile
+        # config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
+        config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
+
+        # Start streaming
+        pipeline.start(config)
+        try:
+            while True:
+                # Wait for a coherent color frame
+                frames = pipeline.wait_for_frames()
+                color_frame = frames.get_color_frame()
+                if not color_frame:
+                    continue
+
+                # Convert image to numpy array
+                self.img = np.asanyarray(color_frame.get_data())
+                height, width = self.img.shape[:2]
+                self.img = cv.resize(self.img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
+                # self.img = self.img[390:790, 680:1080]
+
+                # Check the file name was right
+                if self.img is None: 
+                    sys.exit("""could not read the image""")
+
+                # Find cans - blue
+                paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), 21, 26)
+
+                # Find bottles - red
+                paint_image = self.paint_circles(self.img, paint_image, (255, 0, 0), 10, 16)
+                
+                img_out = self.bridge.cv2_to_imgmsg(paint_image, "bgr8")
+                self.image_pub.publish(img_out)
+
+                # Show image
+                cv.namedWindow("detected_circles", cv.WINDOW_AUTOSIZE)
+                cv.imshow("detected_circles", paint_image)
+                key = cv.waitKey(1)
+                
+                # Press esc or 'q' to close the image window
+                if key & 0xFF == ord('q') or key == 27:
+                    cv.destroyAllWindows()
+                    break
+
+        finally:
+            # Stop streaming
+            pipeline.stop()
+
+
     def get_board_state(self, srv):
         """! Run object detection to produce board state from stored image.
-        Currently incomplete 
         """
         # This is just the script for testing, everything here needs to change
         # Set local so no change during run
+        rospy.logdebug(f"get_board_state service")
         img = self.img
 
-        rospy.logdebug(f"get_board_state service")
-        objects = []
+        response = BoardResponse()
+        self.objects.extend(self.detect_cans(img))
+        self.objects.extend(self.detect_bottles(img))
+        response.objects = self.objects
 
-        objects.extend(self.detect_cans(img))
-        objects.extend(self.detect_bottles(img))
-        print(objects)
-
-        return BoardResponse(objects)
+        return response
       
 
     def detect_cans(self, image):
@@ -302,16 +316,16 @@ class Detect():
         return paint_image
 
 
-    def run_detection(self):
-        while not rospy.is_shutdown():
-            rospy.logdebug(f"Run Message")
-            if self.detection_mode:
-                # self.setup_services()
-                self.rate.sleep()
-                cv.destroyAllWindows()
-            else:
-                rospy.logdebug(f"In pause mode")
-            self.rate.sleep()
+    # def run_detection(self):
+    #     while not rospy.is_shutdown():
+    #         rospy.logdebug(f"Run Message")
+    #         if self.detection_mode:
+    #             # self.setup_services()
+    #             self.rate.sleep()
+    #             cv.destroyAllWindows()
+    #         else:
+    #             rospy.logdebug(f"In pause mode")
+    #         self.rate.sleep()
         
 
 
@@ -320,8 +334,9 @@ def main():
     rospy.init_node("object_detection", log_level = rospy.DEBUG)
     rospy.logdebug(f"classification node started")
     detect = Detect()
-    detect.run_detection()
-    # rospy.sleep(5)
+    while not rospy.is_shutdown():
+        rospy.logdebug(f"Starting detection")
+        detect.image_processing()
     rospy.spin()
 
     

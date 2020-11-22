@@ -6,7 +6,7 @@
 
     <maintainer email="jketchum@u.northwestern.edu">Jake</maintainer>
     <maintainer email="kaileysmith2021@u.northwestern.edu">Kailey Smith</maintainer>
-    <maintainer email="yaelbenshalom2022@u.northwestern.edu">Yael Ben Shalom</maintainer>
+    <maintainer email="yaelbenshalom@u.northwestern.edu">Yael Ben Shalom</maintainer>
     <maintainer email="mingqingyuan2021@u.northwestern.edu">Mingqing Yuan</maintainer>
     <maintainer email="jketchum@u.northwestern.edu">Jake</maintainer>
     <license>MIT</license>
@@ -22,6 +22,7 @@
     <build_depend>message_generation</build_depend>
     <build_depend>baxter_core_msgs</build_depend>
     <!-- <build_depend>baxter_interface</build_depend> -->
+    
     <!-- Dependencies needed to build against this package --> 
     <build_export_depend>rostest</build_export_depend>
     <build_export_depend>moveit_msgs</build_export_depend>
@@ -30,6 +31,7 @@
     <build_export_depend>rospy</build_export_depend>
     <build_export_depend>roscpp</build_export_depend>
     <build_export_depend>baxter_core_msgs</build_export_depend>
+
     <!-- Dependencies required at runtime -->
     <exec_depend>rviz</exec_depend>
     <exec_depend>message_runtime</exec_depend>
