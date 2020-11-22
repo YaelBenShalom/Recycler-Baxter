@@ -69,7 +69,8 @@ class Detect():
         # self.set_default_image()
         
         # #self.setup_image_stream()
-
+        
+        state = rospy.Service('get_board_state', Board, self.get_board_state)
 
         # Configure color stream
         pipeline = rs.pipeline()
@@ -116,17 +117,17 @@ class Detect():
             pipeline.stop()
 
 
-    def setup_image_stream(self):
-        """! Initialize the ros subscript to incoming images and CVbridges. 
-        This is required for normal operations since this is how the node
-        gets it's images for processing. However, during unit testing other
-        means of loading images may be appropriate. 
-        """
-        rospy.loginfo("Setting up image stream")
-        self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber('/cameras/right_hand_camera', Image,
-                                    self.image_callback, queue_size=1)
-        self.capture = cv.VideoCapture(2)  # TODO - which camera??
+    # def setup_image_stream(self):
+    #     """! Initialize the ros subscript to incoming images and CVbridges. 
+    #     This is required for normal operations since this is how the node
+    #     gets it's images for processing. However, during unit testing other
+    #     means of loading images may be appropriate. 
+    #     """
+    #     rospy.logdebug(f"Setting up image stream")
+    #     self.bridge = CvBridge()
+    #     self.image_sub = rospy.Subscriber('/cameras/right_hand_camera', Image,
+    #                                 self.image_callback, queue_size=1)
+    #     self.capture = cv.VideoCapture(2)  # TODO - which camera??
 
 
     def setup_services(self):
@@ -134,9 +135,14 @@ class Detect():
         This should be called after all other setup has been performed to
         prevent invalid service calls.
         """
-        rospy.loginfo("Setting up services")
-        state = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
+        rospy.logdebug(f"Setting up services")
+        rospy.wait_for_service('get_board_state')
+        # state = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
 
+        # state_service = Board()
+        # state_service.objects = objects
+        # state(state_service.objects)
+        # rospy.sleep(1)
 
     # def set_default_image(self):
     #     """! Load a default image from the local files. Used for testing. 
@@ -148,22 +154,22 @@ class Detect():
     #         rospy.logwarn("WARNING: could not read default image")
 
 
-    def image_callback(self, image_message): 
-        """! Handle a new incoming image from the robot. 
-        This function is responsible for processing the image into a an 
-        OpenCV friendly format, and for storing it as a class variable.
+    # def image_callback(self, image_message): 
+    #     """! Handle a new incoming image from the robot. 
+    #     This function is responsible for processing the image into a an 
+    #     OpenCV friendly format, and for storing it as a class variable.
          
-        @param image_message, a ross Image message for processing. 
-        """         
-        rospy.logdebug("Processing incoming image")               
-        try:
-            cv_image = self.bridge.imgmsg_to_cv2(image_message,
-                                    desired_encoding='passthrough')
-        except CvBridgeError as e:
-            rospy.logwarn(e)
+    #     @param image_message, a ross Image message for processing. 
+    #     """         
+    #     rospy.logdebug(f"Processing incoming image")               
+    #     try:
+    #         cv_image = self.bridge.imgmsg_to_cv2(image_message,
+    #                                 desired_encoding='passthrough')
+    #     except CvBridgeError as e:
+    #         rospy.logwarn(e)
 
-        #TODO: store centrally or remove.
-        (rows,cols,channels) = cv_image.shape
+    #     #TODO: store centrally or remove.
+    #     (rows,cols,channels) = cv_image.shape
 
 
     def get_board_state(self, srv):
@@ -174,16 +180,12 @@ class Detect():
         # This is just the script for testing, everything here needs to change
         # Set local so no change during run
         img = self.img
-        
-        rospy.loginfo("calling service")
-        rospy.wait_for_service('get_board_state')
-        state_service = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
 
+        rospy.logdebug(f"get_board_state service")
         objects = [] 
         objects.extend(self.detect_cans(img))
         objects.extend(self.detect_bottles(img))
         print(objects)
-        
         # # Find cans - blue
         # paint_image = self.paint_circles(img, img, (0, 0, 255), 21, 26)
 
@@ -195,7 +197,7 @@ class Detect():
         # cv.imshow("detected_circles", paint_image)
         # key = cv.waitKey(1)
 
-        # # Press esc or 'q' to close the image window
+        # Press esc or 'q' to close the image window
         # if key & 0xFF == ord('q') or key == 27:
         #     cv.destroyAllWindows()
 
@@ -211,9 +213,9 @@ class Detect():
           Cans (list) - A list of cans' state
                        (type - CAN, sorted - False, location)
         """
-        rospy.loginfo("Detecting Cans")
+        rospy.logdebug(f"Detecting Cans")
         circles = self.detect_circles(image, self.can_diameter_min, self.can_diameter_max)
-        rospy.loginfo(f"circles = {circles}")
+        rospy.logdebug(f"circles = {circles}")
         cans = []
         for c in circles[0]:
             can = Object()
@@ -223,6 +225,9 @@ class Detect():
             can.location.y = c[1]
             can.location.z = -1 #TODO: Implement a decent vertical offset 
             cans.append(can)
+
+        # Find cans - blue
+        paint_image = paint_circles(img, img, (0, 0, 255), self.can_diameter_min, self.can_diameter_max)
         return cans
 
 
@@ -235,9 +240,9 @@ class Detect():
           Bottles (list) - A list of bottles' state
                           (type - BOTTLE, sorted - False, location)
         """
-        rospy.loginfo("Detecting Bottles")
+        rospy.logdebug(f"Detecting Bottles")
         circles = self.detect_circles(image, self.bottle_diameter_min, self.bottle_diameter_max)
-        rospy.loginfo(f"circles = {circles}")
+        rospy.logdebug(f"circles = {circles}")
         bottles = []
         for c in circles[0]:
             bottle = Object()
@@ -247,6 +252,10 @@ class Detect():
             bottle.location.y = c[1]
             bottle.location.z = -1 #TODO: Implement a decent vertical offset 
             bottles.append(bottle)
+            
+        # Find bottles - red
+        paint_image = paint_circles(img, paint_image, (255, 0, 0), self.bottle_diameter_min, self.bottle_diameter_max)
+
         return bottles
 
 
@@ -280,37 +289,46 @@ class Detect():
         """! This function finds all the specified circles and paints them.
         It is for testing purpose only
         """         
+        # cv.imshow("img", img)
+        # crop_img = img[400:800, 700:1100]
+        # cv.imshow("crop_img", crop_img)
         # Go to greyscale   
-        grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        _, grey_thresh = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
+        grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        _, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
+        # cv.imshow("th3", grey)
 
         # Blur the image
-        grey_med_blur = cv.medianBlur(grey_thresh, 5)
-        grey_gauss_blur = cv.GaussianBlur(grey_med_blur, (5,5), 0)
+        # grey = cv.blur(grey,( 5,5))
+        # cv.imshow("blur", grey)
+        grey = cv.medianBlur(grey, 5)
+        # cv.imshow("medianBlur", grey)
+        grey = cv.GaussianBlur(grey, (5,5), 0)
+        # cv.imshow("GaussianBlur", grey)
 
         # Run the algorithm, get the circles
-        rows = grey_gauss_blur.shape[0]
-        circles = cv.HoughCircles(grey_gauss_blur, cv.HOUGH_GRADIENT, 1, rows / 16, 
+        rows = grey.shape[0]
+        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
                                 param1 = 100, param2 = 30,
-                                minRadius = min_dia, maxRadius = max_dia)
-
+                                minRadius = min_rad, maxRadius = max_rad)
+        
         # Paint the circles onto our paint image
         if circles is not None: 
-                circles = np.uint16(np.around(circles))
-                for i in circles[0, :]:
-                    print ("circle: ", i)
-                    center = (i[0], i[1])
-                    cv.circle(paint_image, center, 1, (0, 100, 100), 3)
-                    diameter = i[2]
-                    cv.circle(paint_image, center, diameter, color, 3)
-        return circles, paint_image
+            circles = np.uint16(np.around(circles))
+            for i in circles[0, :]:
+                print ("circle: ", i)
+                center = (i[0], i[1])
+                cv.circle(paint_image, center, 1, (0, 100, 100), 3)
+                radius = i[2]
+                cv.circle(paint_image, center, radius, color, 3)
+
+        return paint_image
 
 
     def run_detection(self):
         while not rospy.is_shutdown():
             rospy.logdebug(f"Run Message")
             if self.detection_mode:
-                self.setup_services()
+                # self.setup_services()
                 self.rate.sleep()
                 cv.destroyAllWindows()
             else:
@@ -325,6 +343,7 @@ def main():
     rospy.logdebug(f"classification node started")
     detect = Detect()
     detect.run_detection()
+    rospy.sleep(5)
     rospy.spin()
 
     
