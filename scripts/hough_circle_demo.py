@@ -77,7 +77,7 @@ config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
 # Recording video to bagfile
 # config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
-config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
+config.enable_device_from_file("bagfiles/camera_video")  # Uncomment this if you want to work of saved bagfile
 
 # Start streaming
 pipeline.start(config)

@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-"""! This node is responsible for locating and classifying the sorting objects.
-
-Subscribes:
-    /cameras/right_hand_camera - Image, Photos from the baxter hand camera. 
+"""! This node is responsible for locating and classifying the objects located in front
+of the robot.
 
 Publishes:
-    Nothing Presently. 
+    image_pub - published the circled image after detecting the bottles and cans 
 
 Services:
-    Nothing Presently.
-
-TODO
+    state_srv - a service containing information about the objects type (-1, 0, 1),
+                have they been sorted yet (True, False), and their location (x, y, z,
+                while the z coordinate is always -1).
 """
 
 import rospy
@@ -21,7 +19,7 @@ import numpy as np
 import cv2 as cv
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Pose
-from sensor_msgs.msg import Image, CameraInfo, CompressedImage
+from sensor_msgs.msg import Image
 from can_sort.msg import Object
 from can_sort.srv import Board, BoardResponse
 import pyrealsense2 as rs
@@ -87,11 +85,13 @@ class Detect():
         config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
         # Recording video to bagfile
-        config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
+        # config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
+        config.enable_device_from_file("bagfiles/camera_video2")  # Uncomment this if you want to work of saved bagfile
         # config.enable_device_from_file("bagfiles/camera_video")  # Uncomment this if you want to work of saved bagfile
 
         # Start streaming
         pipeline.start(config)
+
         try:
             while True:
                 # Wait for a coherent color frame
@@ -104,7 +104,6 @@ class Detect():
                 self.img = np.asanyarray(color_frame.get_data())
                 height, width = self.img.shape[:2]
                 self.img = cv.resize(self.img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
-                # self.img = self.img[390:790, 680:1080]
 
                 # Check the file name was right
                 if self.img is None: 
@@ -136,6 +135,11 @@ class Detect():
 
     def get_board_state(self, srv):
         """! Run object detection to produce board state from stored image.
+        Inputs:
+          service (srv) - the board_state service.
+        
+        Returns:
+          BoardResponse (lisrvst) - returning a service response of the objects type and location
         """
         # This is just the script for testing, everything here needs to change
         # Set local so no change during run
@@ -172,7 +176,7 @@ class Detect():
             # can.location.y = c[0]
             can.location.x = -0.001286185*c[1] + 1.396265
             can.location.y = -0.001329845*c[0] + 0.9717295
-            can.location.z = -1 #TODO: Implement a decent vertical offset 
+            can.location.z = -1 # This value will be overwrite be the motion node
             cans.append(can)
 
         return cans
@@ -199,7 +203,7 @@ class Detect():
             # bottle.location.y = c[0]
             bottle.location.x = -0.001286185*c[1] + 1.396265
             bottle.location.y = -0.001329845*c[0] + 0.9717295
-            bottle.location.z = -1 #TODO: Implement a decent vertical offset 
+            bottle.location.z = -1 # This value will be overwrite be the motion node
             bottles.append(bottle)
             
         return bottles
@@ -232,10 +236,18 @@ class Detect():
 
 
     def paint_circles(self, image, paint_image, color, min_dia, max_dia = 10):
-        """! This function finds all the specified circles and paints them.
-        It is for testing purpose only
+        """! This function finds all the circles with a specified diameter and paints them.
+        Inputs:
+          image (img) - the stored image.
+          paint_image (img) - the circle-painted image returned last time the function was called
+                              (If the function was never called before, image = paint_image).
+          color (rgb) - the desired color for the painted circles
+          min_dia (int) - the object minimum diameter
+          max_dia (int) - the object maximum diameter
+
+        Returns:
+          paint_image (img) - A circle-painted image.
         """         
-        # crop_img = img[400:800, 700:1100]
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         _, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
 
@@ -244,7 +256,7 @@ class Detect():
 
         # Run the algorithm, get the circles
         rows = grey.shape[0]
-        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
+        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 20, 
                                 param1 = 100, param2 = 30,
                                 minRadius = min_dia, maxRadius = max_dia)
         
@@ -255,8 +267,7 @@ class Detect():
                 print ("circle: ", i)
                 center = (i[0], i[1])
                 cv.circle(paint_image, center, 1, (0, 100, 100), 3)
-                radius = i[2]
-                cv.circle(paint_image, center, radius, color, 3)
+                cv.circle(paint_image, center, i[2], color, 3)
 
         return paint_image       
 
@@ -266,10 +277,7 @@ def main():
     rospy.init_node("object_detection", log_level = rospy.DEBUG)
     rospy.logdebug(f"classification node started")
     detect = Detect()
-    # while not rospy.is_shutdown():
-    #     rospy.logdebug(f"Starting detection")
     detect.image_processing()
-        # break
     rospy.spin()
 
     
