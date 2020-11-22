@@ -21,13 +21,13 @@ include_directories(
 )
 
 ## Generate messages in the 'msg' folder
-add_message_files(
+add_message_files(DIRECTORY msg
     FILES
     Object.msg
  )
 
 ## Generate services in the 'srv' folder
-add_service_files(
+add_service_files(DIRECTORY srv
     FILES 
     Board.srv
 
