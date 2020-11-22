@@ -102,9 +102,15 @@ class Detect():
                     sys.exit("""could not read the image. Make sure you are running 
                     the script from the /scripts folder.""")
 
+                # Find cans - blue
+                paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), 21, 26)
+
+                # Find bottles - red
+                paint_image = self.paint_circles(self.img, paint_image, (255, 0, 0), 10, 16)
+
                 # Show image
                 cv.namedWindow("detected_circle", cv.WINDOW_AUTOSIZE)
-                cv.imshow("detected_circles", self.img)
+                cv.imshow("detected_circles", paint_image)
                 key = cv.waitKey(1)
 
                 # Press esc or 'q' to close the image window
@@ -182,7 +188,8 @@ class Detect():
         img = self.img
 
         rospy.logdebug(f"get_board_state service")
-        objects = [] 
+        objects = []
+
         objects.extend(self.detect_cans(img))
         objects.extend(self.detect_bottles(img))
         print(objects)
@@ -226,8 +233,6 @@ class Detect():
             can.location.z = -1 #TODO: Implement a decent vertical offset 
             cans.append(can)
 
-        # Find cans - blue
-        paint_image = paint_circles(img, img, (0, 0, 255), self.can_diameter_min, self.can_diameter_max)
         return cans
 
 
@@ -253,9 +258,6 @@ class Detect():
             bottle.location.z = -1 #TODO: Implement a decent vertical offset 
             bottles.append(bottle)
             
-        # Find bottles - red
-        paint_image = paint_circles(img, paint_image, (255, 0, 0), self.bottle_diameter_min, self.bottle_diameter_max)
-
         return bottles
 
 
@@ -293,7 +295,7 @@ class Detect():
         # crop_img = img[400:800, 700:1100]
         # cv.imshow("crop_img", crop_img)
         # Go to greyscale   
-        grey = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+        grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         _, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
         # cv.imshow("th3", grey)
 
@@ -309,7 +311,7 @@ class Detect():
         rows = grey.shape[0]
         circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
                                 param1 = 100, param2 = 30,
-                                minRadius = min_rad, maxRadius = max_rad)
+                                minRadius = min_dia, maxRadius = max_dia)
         
         # Paint the circles onto our paint image
         if circles is not None: 
