@@ -39,7 +39,7 @@ class Detect():
         self.can_diameter_min = 21       # [units are pixels]
         self.can_diameter_max = 26       # [units are pixels]
         self.bottle_diameter_min = 10    # [units are pixels]
-        self.bottle_diameter_max = 15    # [units are pixels]
+        self.bottle_diameter_max = 17    # [units are pixels]
         # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
         # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
         # self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
@@ -58,17 +58,6 @@ class Detect():
         self.rate = rospy.Rate(100)
         self.detection_mode = True
         self.objects = []
-        # # Info for default image 
-        # self.rospack = rospkg.RosPack()
-        # path = self.rospack.get_path(name = 'can_sort') + '/camera_images/11.10.20/'
-        # self.image_directory = path
-        # self.image_name = "bottle_top_1.jpg"
-    
-        # #TODO: figure out correct commenting style 
-        # ##! Stores the current image. 
-        # self.set_default_image()
-        
-        # #self.setup_image_stream()
 
         #initialize publisher
         self.image_pub = rospy.Publisher('/image_out', Image, queue_size=1)
@@ -79,61 +68,6 @@ class Detect():
         rospy.logdebug(f"Service initialized")
 
         self.bridge = CvBridge()
-
-
-    # def setup_image_stream(self):
-    #     """! Initialize the ros subscript to incoming images and CVbridges. 
-    #     This is required for normal operations since this is how the node
-    #     gets it's images for processing. However, during unit testing other
-    #     means of loading images may be appropriate. 
-    #     """
-    #     rospy.logdebug(f"Setting up image stream")
-    #     self.bridge = CvBridge()
-    #     self.image_sub = rospy.Subscriber('/cameras/right_hand_camera', Image,
-    #                                 self.image_callback, queue_size=1)
-    #     self.capture = cv.VideoCapture(2)  # TODO - which camera??
-
-
-    # def setup_services(self):
-    #     """! Set up the the ros services provided by this node. 
-    #     This should be called after all other setup has been performed to
-    #     prevent invalid service calls.
-    #     """
-    #     rospy.logdebug(f"Setting up services")
-    #     rospy.wait_for_service('get_board_state')
-    #     # state = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
-
-    #     # state_service = Board()
-    #     # state_service.objects = objects
-    #     # state(state_service.objects)
-    #     # rospy.sleep(1)
-
-    # def set_default_image(self):
-    #     """! Load a default image from the local files. Used for testing. 
-    #     """  
-    #     # Read in the image
-    #     self.img = cv.imread(self.image_directory + self.image_name)
-    #     # Check the file name was right
-    #     if self.img is None: 
-    #         rospy.logwarn("WARNING: could not read default image")
-
-
-    # def image_callback(self, image_message): 
-    #     """! Handle a new incoming image from the robot. 
-    #     This function is responsible for processing the image into a an 
-    #     OpenCV friendly format, and for storing it as a class variable.
-         
-    #     @param image_message, a ross Image message for processing. 
-    #     """         
-    #     rospy.logdebug(f"Processing incoming image")               
-    #     try:
-    #         cv_image = self.bridge.imgmsg_to_cv2(image_message,
-    #                                 desired_encoding='passthrough')
-    #     except CvBridgeError as e:
-    #         rospy.logwarn(e)
-
-    #     #TODO: store centrally or remove.
-    #     (rows,cols,channels) = cv_image.shape
 
 
     def image_processing(self):
@@ -147,8 +81,8 @@ class Detect():
         config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
         # Recording video to bagfile
-        # config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
-        config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
+        config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
+        # config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
 
         # Start streaming
         pipeline.start(config)
@@ -171,10 +105,10 @@ class Detect():
                     sys.exit("""could not read the image""")
 
                 # Find cans - blue
-                paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), 21, 26)
+                paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), self.can_diameter_min, self.can_diameter_max)
 
                 # Find bottles - red
-                paint_image = self.paint_circles(self.img, paint_image, (255, 0, 0), 10, 16)
+                paint_image = self.paint_circles(self.img, paint_image, (255, 0, 0), self.bottle_diameter_min, self.bottle_diameter_max)
                 
                 img_out = self.bridge.cv2_to_imgmsg(paint_image, "bgr8")
                 self.image_pub.publish(img_out)
@@ -201,6 +135,7 @@ class Detect():
         # Set local so no change during run
         rospy.logdebug(f"get_board_state service")
         img = self.img
+        self.objects = []
 
         response = BoardResponse()
         self.objects.extend(self.detect_cans(img))
@@ -313,20 +248,7 @@ class Detect():
                 radius = i[2]
                 cv.circle(paint_image, center, radius, color, 3)
 
-        return paint_image
-
-
-    # def run_detection(self):
-    #     while not rospy.is_shutdown():
-    #         rospy.logdebug(f"Run Message")
-    #         if self.detection_mode:
-    #             # self.setup_services()
-    #             self.rate.sleep()
-    #             cv.destroyAllWindows()
-    #         else:
-    #             rospy.logdebug(f"In pause mode")
-    #         self.rate.sleep()
-        
+        return paint_image       
 
 
 def main():
