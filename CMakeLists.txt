@@ -53,6 +53,7 @@ catkin_package(
 
 catkin_install_python(
   PROGRAMS
+  nodes/recycle
   nodes/object_detection.py
   nodes/Mover.py
   System_operation/small_table_raised

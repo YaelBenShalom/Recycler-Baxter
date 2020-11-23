@@ -6,7 +6,7 @@
 
   <!--Node for trajectories, used with MoveIt -->
   <group if="$(arg Mover)">
-     <node name="Mover" pkg="can_sort" type="small_table_raised" output = "screen"/>
+     <node name="recycle" pkg="can_sort" type="recycle" output = "screen"/>
   <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py" />
   </group>
 
