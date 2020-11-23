@@ -53,31 +53,25 @@ class Mover:
 
         self.default_gripper_orientation = Quaternion(1.0, 0, 0, 0)
         
-        #Soda Can default values
-        # self.can_z = -0.12 #For the OG table
-        # self.can_z = -0.13 #For the small table on top of boxes
-        self.can_z = -0.11 #For the 2nd table
+        #Soda can gripping height for table
+        self.can_z = -0.11
 
+        #Soda bin position, both bins on the robot's right
         self.can_bin_x = 0.2
         self.can_bin_y = -0.9
-        # self.can_bin_x = 0.2
-        # Can bin is on the robot's left
 
-        
-        #Water bottle Default values
-        # self.bottle_z = -0.055 #For the OG table
-        # self.bottle_z = -0.07 #For the small table on top of boxes
-        self.bottle_z = -0.05 #For the OG table
+        #Bottle gripping height for table
+        self.bottle_z = -0.05 
 
+        #Soda bin position, both on the robot's right
         self.bottle_bin_x = 0.5
         self.bottle_bin_y = -0.9
-        # self.bottle_bin_x = 0.5 #OG
-        # Bottle bin is on the robot's right
         
-        self.clearence_z = 0.2;  #Clearence Z Height (to clear bottle)
+        #Clearence height to ensure no collisions
+        self.clearence_z = 0.2; 
         
+        #Robot home position
         self.home_x = 0.65
-        # self.home_y = -0.4
         self.home_y = -0.45
         self.home_z = self.clearence_z
 
@@ -112,6 +106,7 @@ class Mover:
         # self.obj_x_list = [0.75, 0.75, 0.65, 0.65]
         # self.obj_y_list = [-0.2, -0.5, -0.5, -0.2] 
         # self.obj_type_list = ["soda", "bottle", "soda", "soda"]
+
         self.objects_found =  True
         rospy.sleep(1)
 
@@ -224,7 +219,6 @@ class Mover:
         right.move_to_joint_positions(rcmd)
 
     def move_to_home(self):  #Move to home position  
-        # self.init_pos()
         print("Moving to the home position")
         #Set pose for move to home x,y,z position
         home_pose = Pose()

@@ -1,11 +1,11 @@
 <launch>
-   <arg name="Mover" default="True"/>
+   <arg name="Recycle" default="True"/>
    <arg name="object_detection" default="False"/>
 
    <rosparam command="load" file="$(find can_sort)/config/sort.yaml" />
 
   <!--Node for trajectories, used with MoveIt -->
-  <group if="$(arg Mover)">
+  <group if="$(arg Recycle)">
      <node name="recycle" pkg="can_sort" type="recycle" output = "screen"/>
   <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py" />
   </group>
@@ -25,6 +25,4 @@
       <param name="trajectory_execution/allowed_goal_duration_margin" value="50.0"/> <!-- default 1.0 -->
   </include>
   
-  <!--Baxter_mover node-->
-  <!-- <node name ="test" pkg = "final-project-scott-s-bot-for-tots" type = "test" /> -->
 </launch>
