@@ -36,7 +36,7 @@ class Detect():
         # TODO - replace with yaml parameters
         self.can_diameter_min = 24       # [units are pixels]
         self.can_diameter_max = 28       # [units are pixels]
-        self.bottle_diameter_min = 15    # [units are pixels]
+        self.bottle_diameter_min = 13    # [units are pixels]
         self.bottle_diameter_max = 17    # [units are pixels]
         # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
         # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
@@ -149,9 +149,12 @@ class Detect():
         self.objects = []
 
         response = BoardResponse()
-        self.objects.extend(self.detect_cans(img))
-        self.objects.extend(self.detect_bottles(img))
+        if len(self.detect_cans(img)) !=0:
+          self.objects.extend(self.detect_cans(img))
+        if len(self.detect_bottles(img)) != 0:
+          self.objects.extend(self.detect_bottles(img))
         response.objects = self.objects
+        print(f"response is {response}")
 
         return response
       
@@ -222,15 +225,14 @@ class Detect():
         """
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        _, grey_thresh = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
+        _, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
 
-        # Blur the image
-        grey_med_blur = cv.medianBlur(grey_thresh, 5)
-        grey_gauss_blur = cv.GaussianBlur(grey_med_blur, (5,5), 0)
+        grey = cv.medianBlur(grey, 5)
+        grey = cv.GaussianBlur(grey, (5,5), 0)
 
         # Run the algorithm, get the circles
-        rows = grey_gauss_blur.shape[0]
-        circles = cv.HoughCircles(grey_gauss_blur, cv.HOUGH_GRADIENT, 1, rows / 16, 
+        rows = grey.shape[0]
+        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 20, 
                                 param1 = 100, param2 = 30,
                                 minRadius = min_dia, maxRadius = max_dia)
         return circles
@@ -265,7 +267,7 @@ class Detect():
         if circles is not None: 
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
-                print ("circle: ", i)
+                # print ("circle: ", i)
                 center = (i[0], i[1])
                 cv.circle(paint_image, center, 1, (0, 100, 100), 3)
                 cv.circle(paint_image, center, i[2], color, 3)
