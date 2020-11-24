@@ -34,10 +34,10 @@ class Detect():
     def __init__(self):
         # Identification Parameters
         # TODO - replace with yaml parameters
-        self.can_diameter_min = 21       # [units are pixels]
-        self.can_diameter_max = 26       # [units are pixels]
-        self.bottle_diameter_min = 10    # [units are pixels]
-        self.bottle_diameter_max = 16    # [units are pixels]
+        self.can_diameter_min = 24       # [units are pixels]
+        self.can_diameter_max = 28       # [units are pixels]
+        self.bottle_diameter_min = 15    # [units are pixels]
+        self.bottle_diameter_max = 17    # [units are pixels]
         # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
         # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
         # self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
@@ -82,11 +82,11 @@ class Detect():
         # Configure color stream
         pipeline = rs.pipeline()
         config = rs.config()
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 30)
 
         # Recording video to bagfile
-        # config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
-        config.enable_device_from_file("bagfiles/camera_video2")  # Uncomment this if you want to work of saved bagfile
+        config.enable_record_to_file("camera_video")  # Comment this if you want to work of saved bagfile
+        # config.enable_device_from_file("bagfiles/camera_video2")  # Uncomment this if you want to work of saved bagfile
         # config.enable_device_from_file("bagfiles/camera_video")  # Uncomment this if you want to work of saved bagfile
 
         # Start streaming
@@ -103,7 +103,8 @@ class Detect():
                 # Convert image to numpy array
                 self.img = np.asanyarray(color_frame.get_data())
                 height, width = self.img.shape[:2]
-                self.img = cv.resize(self.img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
+                self.img = cv.resize(self.img, (int(1.2*width), int(1.2*height)), interpolation = cv.INTER_CUBIC)
+                self.img = self.img[200:900, 1000:1700]
 
                 # Check the file name was right
                 if self.img is None: 
@@ -174,8 +175,8 @@ class Detect():
             can.sorted = False 
             # can.location.x = c[1]
             # can.location.y = c[0]
-            can.location.x = -0.001286185*c[1] + 1.396265
-            can.location.y = -0.001329845*c[0] + 0.9717295
+            can.location.x = 0.0008098345*c[1] + 0.416338
+            can.location.y = 0.00104069535*c[0] - 0.6266168
             can.location.z = -1 # This value will be overwrite be the motion node
             cans.append(can)
 
@@ -201,8 +202,8 @@ class Detect():
             bottle.sorted = False 
             # bottle.location.x = c[1]
             # bottle.location.y = c[0]
-            bottle.location.x = -0.001286185*c[1] + 1.396265
-            bottle.location.y = -0.001329845*c[0] + 0.9717295
+            bottle.location.x = 0.0008098345*c[1] + 0.416338
+            bottle.location.y = 0.00104069535*c[0] - 0.6266168
             bottle.location.z = -1 # This value will be overwrite be the motion node
             bottles.append(bottle)
             
