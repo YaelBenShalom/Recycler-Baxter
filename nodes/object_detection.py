@@ -23,6 +23,7 @@ from sensor_msgs.msg import Image
 from can_sort.msg import Object
 from can_sort.srv import Board, BoardResponse
 import pyrealsense2 as rs
+# from can_sort.calibration import Calibration # TODO
 
 
 class Detect():
@@ -34,23 +35,23 @@ class Detect():
     def __init__(self):
         # Identification Parameters
         # TODO - replace with yaml parameters
-        # self.can_diameter_min = 35       # [units are pixels]
-        # self.can_diameter_max = 40       # [units are pixels]
-        # self.bottle_diameter_min = 25    # [units are pixels]
-        # self.bottle_diameter_max = 29    # [units are pixels]
-        self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
-        self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
-        self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
-        self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")       # Initializing bottles maximum diameter [pixels]
+        self.can_diameter_min = 30       # [units are pixels]
+        self.can_diameter_max = 40       # [units are pixels]
+        self.bottle_diameter_min = 25    # [units are pixels]
+        self.bottle_diameter_max = 28    # [units are pixels]
+        # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
+        # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
+        # self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
+        # self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")       # Initializing bottles maximum diameter [pixels]
 
         # Object Type Definitions
         # TODO - replace with yaml parameters
-        # self.ERROR = -1     # Initializing object type - error
-        # self.BOTTLE = 0     # Initializing object type - bottle
-        # self.CAN = 1        # Initializing object type - can
-        self.ERROR = rospy.get_param("ERROR")       # Initializing object type - error
-        self.BOTTLE = rospy.get_param("BOTTLE")     # Initializing object type - bottle
-        self.CAN = rospy.get_param("CAN")           # Initializing object type - can
+        self.ERROR = -1     # Initializing object type - error
+        self.BOTTLE = 0     # Initializing object type - bottle
+        self.CAN = 1        # Initializing object type - can
+        # self.ERROR = rospy.get_param("ERROR")       # Initializing object type - error
+        # self.BOTTLE = rospy.get_param("BOTTLE")     # Initializing object type - bottle
+        # self.CAN = rospy.get_param("CAN")           # Initializing object type - can
         
         # self.R = rospy.get_param("~pub_freq")           # initializing the frequency at which to publish messages
         self.rate = rospy.Rate(100)
@@ -85,7 +86,7 @@ class Detect():
         config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 6)
 
         # Recording video to bagfile
-        config.enable_record_to_file("camera_video3")  # Comment this if you want to work of saved bagfile
+        config.enable_record_to_file("most_update_video")  # Comment this if you want to work of saved bagfile
         # config.enable_device_from_file("camera_video")  # Uncomment this if you want to work of saved bagfile
         # config.enable_device_from_file("bagfiles/camera_video")  # Uncomment this if you want to work of saved bagfile
 
@@ -113,7 +114,7 @@ class Detect():
                 if self.img is None: 
                     sys.exit("""could not read the image""")
 
-                # self.detect_calibration_markers(self.img)
+                paint_image = self.paint_circles(self.img, self.img, (0, 255, 0), 10, 20)
 
                 # Find cans - blue
                 paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), self.can_diameter_min, self.can_diameter_max)
@@ -153,6 +154,8 @@ class Detect():
         img = self.img
         self.objects = []
 
+        # self.detect_calibration_points(img) # TODO
+
         response = BoardResponse()
         if len(self.detect_cans(img)) !=0:
           self.objects.extend(self.detect_cans(img))
@@ -162,7 +165,22 @@ class Detect():
         print(f"response is {response}")
 
         return response
-      
+
+
+    # def detect_calibration_points(self, image):  # TODO
+    #     """! This function detects bottles located on the table.
+    #     Inputs:
+    #       Image (img) - the stored image.
+        
+    #     Returns:
+    #       Bottles (list) - A list of bottles' state
+    #                       (type - BOTTLE, sorted - False, location)
+    #     """
+    #     rospy.logdebug(f"Detecting Calibration Points")
+    #     circles = self.detect_circles(image, 10, 20)
+    #     print ("circles: ", circles)
+    #     return self.a, self.b, self.m, self.n
+
 
     def detect_cans(self, image):
         """! This function detects cans located on the table.
@@ -260,7 +278,7 @@ class Detect():
         if circles is not None: 
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
-                print ("circle: ", i)
+                # print ("circle: ", i)
                 center = (i[0], i[1])
                 cv.circle(paint_image, center, 1, (0, 100, 100), 3)
                 cv.circle(paint_image, center, i[2], color, 3)

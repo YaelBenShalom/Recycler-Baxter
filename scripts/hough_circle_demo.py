@@ -100,7 +100,6 @@ try:
             sys.exit("""could not read the image. Make sure you are running 
             the script from the /scripts folder.""")
 
-
         # Find cans - blue
         paint_image = paint_circles(img, img, (0, 0, 255), 21, 26)
 
