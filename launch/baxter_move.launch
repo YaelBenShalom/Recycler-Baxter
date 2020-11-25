@@ -4,6 +4,8 @@
 
    <rosparam command="load" file="$(find can_sort)/config/sort.yaml" />
 
+   <node name = "display_images" pkg = "can_sort" type = "disp_img"/>
+
   <!--Node for trajectories, used with MoveIt -->
   <group if="$(arg Recycle)">
      <node name="recycle" pkg="can_sort" type="recycle" output = "screen"/>
@@ -21,8 +23,8 @@
   </include>
 
   <include file = "$(find baxter_moveit_config)/launch/trajectory_execution.launch">
-      <param name="trajectory_execution/allowed_execution_duration_scaling" value="50.0"/> <!-- default 1.5 -->
-      <param name="trajectory_execution/allowed_goal_duration_margin" value="50.0"/> <!-- default 1.0 -->
+      <param name="trajectory_execution/allowed_execution_duration_scaling" value="200.0"/> <!-- default 1.5 -->
+      <param name="trajectory_execution/allowed_goal_duration_margin" value="200.0"/> <!-- default 1.0 -->
   </include>
   
 </launch>

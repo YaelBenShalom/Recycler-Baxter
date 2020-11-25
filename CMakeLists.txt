@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
     message_generation
     moveit_msgs
     rospy
+    sensor_msgs
     std_msgs
     tf
 )
@@ -35,6 +36,7 @@ add_message_files(DIRECTORY msg
 add_service_files(DIRECTORY srv
     FILES 
     Board.srv
+    DisplayImage.srv
 )
 
 
@@ -51,6 +53,7 @@ catkin_package(
    message_runtime
    moveit_msgs
    rospy
+   sensor_msgs
    std_msgs
 )
 
@@ -59,7 +62,7 @@ catkin_install_python(
   PROGRAMS
   nodes/recycle
   nodes/object_detection.py
-  nodes/Mover.py
+  nodes/disp_img
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -1,0 +1,5 @@
+<launch>
+
+    <node name="object_detection" pkg="can_sort" type="object_detection.py"/>
+   
+</launch>

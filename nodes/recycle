@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-
 import sys
 import rospy
 import numpy as np
@@ -13,6 +12,7 @@ import baxter_interface
 import std_msgs.msg
 import cv2
 import cv_bridge 
+import intera_interface
 from subprocess import call
 from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
 from baxter_core_msgs.msg import EndEffectorState
@@ -22,10 +22,10 @@ from moveit_commander import RobotCommander
 from numpy import result_type
 from can_sort.msg import Object
 from can_sort.srv import Board, BoardResponse
+from sensor_msgs.msg import Image
+from can_sort.srv import DisplayImage, DisplayImageResponse
 
-
-
-class Mover:
+class Recycle:
     def __init__(self):
         '''Initialize environment'''
 
@@ -38,6 +38,7 @@ class Mover:
         moveit_commander.roscpp_initialize(sys.argv)
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
+        self.display_img = rospy.ServiceProxy('display_image', DisplayImage)
 
         #Right arm (Using this arm)
         self.right_group = moveit_commander.MoveGroupCommander("right_arm", wait_for_servers=10) 
@@ -65,7 +66,7 @@ class Mover:
 
         #Soda bin position, both on the robot's right
         self.bottle_bin_x = 0.5
-        self.bottle_bin_y = -0.9
+        self.bottle_bin_y = -0.85
         
         #Clearence height to ensure no collisions
         self.clearence_z = 0.2; 
@@ -83,8 +84,8 @@ class Mover:
         # self.right_group.set_planning_time(seconds = 15)
         # retime_trajectory() 
         self.add_box()
-        self.get_image() 
-        self.initialize_pos()
+        # self.get_image() 
+        # self.initialize_pos()
 
         # call(["rosnode", "kill", "object_detection"])
 
@@ -110,24 +111,24 @@ class Mover:
         self.objects_found =  True
         rospy.sleep(1)
 
-
         while not rospy.is_shutdown():
             try:   
+                self.display_img(img_num = 5)
 
-                if self.objects_found: #res.objects_found
-                    object_count = len(self.obj_type_list) #res.obj_type_list
-                    current_object_number = 0
-                    while current_object_number < object_count:
-                        print('Picking up object number %d \n' % current_object_number)
-                        self.move_to_object(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
-                        self.grasp_object(self.obj_type_list[current_object_number])
-                        self.move_to_bin(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
-                        self.move_to_home()
-                        print('Picked object number %d \n' % current_object_number)
-                        current_object_number += 1
-                    break
-                else:
-                    print("No objects found")
+            #     if self.objects_found: #res.objects_found
+            #         object_count = len(self.obj_type_list) #res.obj_type_list
+            #         current_object_number = 0
+            #         while current_object_number < object_count:
+            #             print('Picking up object number %d \n' % current_object_number)
+            #             self.move_to_object(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
+            #             self.grasp_object(self.obj_type_list[current_object_number])
+            #             self.move_to_bin(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
+            #             self.move_to_home()
+            #             print('Picked object number %d \n' % current_object_number)
+            #             current_object_number += 1
+            #         break
+            #     else:
+            #         print("No objects found")
             except (rospy.ServiceException, rospy.ROSException) as e:
                 rospy.logerr("Service call failed: %s" % e)
     
@@ -181,14 +182,14 @@ class Mover:
 
         right.move_to_joint_positions(rcmd)
 
+        # self.obj_x_list = [0.8, 0.79, 0.55, 0.55]
+        # self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
+        # self.obj_type_list = ["soda", "soda", "soda", "soda"]
+
         # Insert picture stuff here
         self.get_obj_pos = rospy.ServiceProxy('board_state', Board)
         self.object_listy = self.get_obj_pos(use_real = True)
         print(f" found {len(self.object_listy.objects)} objects")
-
-        # self.obj_x_list = [0.8, 0.79, 0.55, 0.55]
-        # self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
-        # self.obj_type_list = ["soda", "soda", "bottle", "soda"]
 
         for item in self.object_listy.objects:
                 self.obj_x_list.append(item.location.x)
@@ -360,8 +361,8 @@ def main():
     """ 
     The main() function. 
     """
-    rospy.init_node('baxter_mover', log_level=rospy.DEBUG)
-    mover = Mover()
+    rospy.init_node('baxter_recycle', log_level=rospy.DEBUG)
+    mover = Recycle()
     rospy.spin()
 
 if __name__ == '__main__':
