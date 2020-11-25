@@ -91,7 +91,10 @@ class Detect():
 
         # Start streaming
         pipeline.start(config)
+
+        # Waiting for the image to stabilize
         rospy.sleep(2)
+
         try:
             while True:
                 # Wait for a coherent color frame
@@ -109,6 +112,8 @@ class Detect():
                 # Check the file name was right
                 if self.img is None: 
                     sys.exit("""could not read the image""")
+
+                # self.detect_calibration_markers(self.img)
 
                 # Find cans - blue
                 paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), self.can_diameter_min, self.can_diameter_max)
@@ -176,10 +181,8 @@ class Detect():
             can = Object()
             can.type = self.CAN
             can.sorted = False 
-            # can.location.x = c[1]
-            # can.location.y = c[0]
-            can.location.x = 0.0007955935*c[1] + 0.415793
-            can.location.y = 0.0021164*c[0] - 1.157145
+            can.location.x = -0.000780212*c[1] + 1.112115
+            can.location.y = -0.0007730055*c[0] + 0.2219635
             can.location.z = -1 # This value will be overwrite be the motion node
             cans.append(can)
 
@@ -203,10 +206,8 @@ class Detect():
             bottle = Object()
             bottle.type = self.BOTTLE
             bottle.sorted = False 
-            # bottle.location.x = c[1]
-            # bottle.location.y = c[0]
-            bottle.location.x = 0.0007955935*c[1] + 0.415793
-            bottle.location.y = 0.0021164*c[0] - 1.157145
+            bottle.location.x = -0.000780212*c[1] + 1.112115
+            bottle.location.y = -0.0007730055*c[0] + 0.2219635
             bottle.location.z = -1 # This value will be overwrite be the motion node
             bottles.append(bottle)
             
@@ -225,14 +226,15 @@ class Detect():
         """
         # Go to greyscale   
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        _, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
+        _, grey_thresh = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
 
-        grey = cv.medianBlur(grey, 5)
-        grey = cv.GaussianBlur(grey, (5,5), 0)
+        # Add blur to the image for better detection
+        grey_blur = cv.medianBlur(grey_thresh, 5)
+        grey_blur2 = cv.GaussianBlur(grey_blur, (5,5), 0)
 
         # Run the algorithm, get the circles
-        rows = grey.shape[0]
-        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 20, 
+        rows = grey_blur2.shape[0]
+        circles = cv.HoughCircles(grey_blur2, cv.HOUGH_GRADIENT, 1, rows / 20, 
                                 param1 = 100, param2 = 30,
                                 minRadius = min_dia, maxRadius = max_dia)
         return circles
@@ -250,18 +252,9 @@ class Detect():
 
         Returns:
           paint_image (img) - A circle-painted image.
-        """         
-        grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        _, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
-
-        grey = cv.medianBlur(grey, 5)
-        grey = cv.GaussianBlur(grey, (5,5), 0)
-
-        # Run the algorithm, get the circles
-        rows = grey.shape[0]
-        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 20, 
-                                param1 = 100, param2 = 30,
-                                minRadius = min_dia, maxRadius = max_dia)
+        """     
+        # Finding the circles in the image    
+        circles = self.detect_circles(image, min_dia, max_dia)
         
         # Paint the circles onto our paint image
         if circles is not None: 
@@ -281,8 +274,8 @@ def main():
     rospy.logdebug(f"classification node started")
     detect = Detect()
     detect.image_processing()
-    rospy.spin()
-
+    # rospy.spin()
+    rospy.sleep(1)
     
 
 if __name__ == '__main__':
