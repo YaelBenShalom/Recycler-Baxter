@@ -28,8 +28,6 @@ from can_sort.srv import DisplayImage, DisplayImageResponse
 class Recycle:
     def __init__(self):
         '''Initialize environment'''
-
-        #set planning time
     
         #Initialized baxter
         baxter_interface.robot_enable.RobotEnable()
@@ -84,51 +82,30 @@ class Recycle:
         # self.right_group.set_planning_time(seconds = 15)
         # retime_trajectory() 
         self.add_box()
-        # self.get_image() 
-        # self.initialize_pos()
+        self.get_image() 
+        self.initialize_pos()
 
         # call(["rosnode", "kill", "object_detection"])
-
-        # Hard coded values, works without vision
-        # x1 = 0.8
-        # x2 = 0.79
-        # x3 = x4 = 0.55
-        # y1 = y4 = -0.1
-        # y2 = y3 = -0.5
-        # self.obj_x_list = [x1, x2, x3, x4]
-        # self.obj_y_list = [y1, y2, y3, y4] 
-        # self.obj_type_list = ["bottle", "soda", "bottle", "soda"]
-
-        ### THESE VALUES WORKED ON 11/20
-        # self.obj_x_list = [0.8, 0.79, 0.55, 0.55]
-        # self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
-        # self.obj_type_list = ["soda", "soda", "bottle", "soda"]
-
-        # self.obj_x_list = [0.75, 0.75, 0.65, 0.65]
-        # self.obj_y_list = [-0.2, -0.5, -0.5, -0.2] 
-        # self.obj_type_list = ["soda", "bottle", "soda", "soda"]
 
         self.objects_found =  True
         rospy.sleep(1)
 
         while not rospy.is_shutdown():
             try:   
-                self.display_img(img_num = 5)
-
-            #     if self.objects_found: #res.objects_found
-            #         object_count = len(self.obj_type_list) #res.obj_type_list
-            #         current_object_number = 0
-            #         while current_object_number < object_count:
-            #             print('Picking up object number %d \n' % current_object_number)
-            #             self.move_to_object(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
-            #             self.grasp_object(self.obj_type_list[current_object_number])
-            #             self.move_to_bin(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
-            #             self.move_to_home()
-            #             print('Picked object number %d \n' % current_object_number)
-            #             current_object_number += 1
-            #         break
-            #     else:
-            #         print("No objects found")
+                if self.objects_found: #res.objects_found
+                    object_count = len(self.obj_type_list) #res.obj_type_list
+                    current_object_number = 0
+                    while current_object_number < object_count:
+                        print('Picking up object number %d \n' % current_object_number)
+                        self.move_to_object(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
+                        self.grasp_object(self.obj_type_list[current_object_number])
+                        self.move_to_bin(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
+                        self.move_to_home()
+                        print('Picked object number %d \n' % current_object_number)
+                        current_object_number += 1
+                    break
+                else:
+                    print("No objects found")
             except (rospy.ServiceException, rospy.ROSException) as e:
                 rospy.logerr("Service call failed: %s" % e)
     
@@ -184,7 +161,7 @@ class Recycle:
 
         # self.obj_x_list = [0.8, 0.79, 0.55, 0.55]
         # self.obj_y_list = [-0.1, -0.5, -0.5, -0.1] 
-        # self.obj_type_list = ["soda", "soda", "soda", "soda"]
+        # self.obj_type_list = ["soda", "bottle", "soda", "bottle"]
 
         # Insert picture stuff here
         self.get_obj_pos = rospy.ServiceProxy('board_state', Board)
@@ -202,6 +179,8 @@ class Recycle:
         print(f"x list {self.obj_x_list}")
         print(f"y list {self.obj_y_list}")
         print(f"type list is {self.obj_type_list}")
+
+        call(["rosnode", "kill", "object_detection"])
         rospy.sleep(2)
 
     def initialize_pos(self):
@@ -218,6 +197,7 @@ class Recycle:
 
 
         right.move_to_joint_positions(rcmd)
+        # self.display_img(img_num = 5)
 
     def move_to_home(self):  #Move to home position  
         print("Moving to the home position")
@@ -239,7 +219,13 @@ class Recycle:
 
         
     def move_to_object(self,obj_type,obj_x,obj_y):
+
         print("Moving to object perch position")
+        if obj_type == "soda":
+            self.display_img(img_num = 2)
+        else:
+            self.display_img(img_num = 3)
+
         waypoints = []
         
         #Move to object x,y position at clearence z height
@@ -298,6 +284,7 @@ class Recycle:
 
             
     def move_to_bin(self,obj_type,obj_x,obj_y):
+        self.display_img(img_num = 1)
         waypoints = []
         
         #Move to object x,y position at clearence z height
@@ -347,11 +334,11 @@ class Recycle:
         print("At bin")
         rospy.sleep(1)
         waypoints = []
-
         
         #Drop Object
         self.right_gripper.open()
         print("Open gripper")
+        self.display_img(img_num = 4)
         rospy.sleep(1)
         print('Object Recycled')
         #Remove Object from Robot
