@@ -63,7 +63,6 @@ catkin_install_python(
   nodes/recycle
   nodes/object_detection.py
   nodes/disp_img
-  nodes/stream_image
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
