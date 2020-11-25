@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """! This python library responsible for the calibration of the camera's output.
-The script gets the coordinated of 2 calibration piunts in pixels, and converts
-it to meters.
+The script gets the coordinated of 2 calibration points in pixels, and converts
+it to meters using linearization.
+The code returns the linearization constants.
 """
 
 import sympy
@@ -13,7 +14,8 @@ class Calibration():
         pass
 
     def convert_position(self, x1_pix, y1_pix, x2_pix, y2_pix):
-        """ this function takes the 
+        """ this function takes the coordinated of 2 calibration points in pixels,
+        and converts it to meters using linearization.
         """
         a, b, m, n = symbols(r'a, b, m, n')
         eq_x1 = Eq(x1_pix*m + n, 0.51)

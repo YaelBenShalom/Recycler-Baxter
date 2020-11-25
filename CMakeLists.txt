@@ -63,6 +63,7 @@ catkin_install_python(
   nodes/recycle
   nodes/object_detection.py
   nodes/disp_img
+  src/${PROJECT_NAME}/calibration.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
