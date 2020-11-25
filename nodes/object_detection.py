@@ -23,6 +23,7 @@ from sensor_msgs.msg import Image
 from can_sort.msg import Object
 from can_sort.srv import Board, BoardResponse
 import pyrealsense2 as rs
+from can_sort.calibration import Calibration
 
 
 class Detect():
@@ -34,10 +35,10 @@ class Detect():
     def __init__(self):
         # Identification Parameters
         # TODO - replace with yaml parameters
-        self.can_diameter_min = 35       # [units are pixels]
+        self.can_diameter_min = 30       # [units are pixels]
         self.can_diameter_max = 40       # [units are pixels]
         self.bottle_diameter_min = 25    # [units are pixels]
-        self.bottle_diameter_max = 29    # [units are pixels]
+        self.bottle_diameter_max = 28    # [units are pixels]
         # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
         # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
         # self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
@@ -113,7 +114,7 @@ class Detect():
                 if self.img is None: 
                     sys.exit("""could not read the image""")
 
-                # self.detect_calibration_markers(self.img)
+                paint_image = self.paint_circles(self.img, self.img, (0, 255, 0), 10, 20)
 
                 # Find cans - blue
                 paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), self.can_diameter_min, self.can_diameter_max)
@@ -153,6 +154,8 @@ class Detect():
         img = self.img
         self.objects = []
 
+        self.detect_calibration_points(img)
+
         response = BoardResponse()
         if len(self.detect_cans(img)) !=0:
           self.objects.extend(self.detect_cans(img))
@@ -162,7 +165,22 @@ class Detect():
         print(f"response is {response}")
 
         return response
-      
+
+
+    def detect_calibration_points(self, image):
+        """! This function detects bottles located on the table.
+        Inputs:
+          Image (img) - the stored image.
+        
+        Returns:
+          Bottles (list) - A list of bottles' state
+                          (type - BOTTLE, sorted - False, location)
+        """
+        rospy.logdebug(f"Detecting Calibration Points")
+        circles = self.detect_circles(image, 10, 20)
+        print ("circles: ", circles)
+        return self.a, self.b, self.m, self.n
+
 
     def detect_cans(self, image):
         """! This function detects cans located on the table.
@@ -260,7 +278,7 @@ class Detect():
         if circles is not None: 
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
-                print ("circle: ", i)
+                # print ("circle: ", i)
                 center = (i[0], i[1])
                 cv.circle(paint_image, center, 1, (0, 100, 100), 3)
                 cv.circle(paint_image, center, i[2], color, 3)
