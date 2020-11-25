@@ -34,23 +34,23 @@ class Detect():
     def __init__(self):
         # Identification Parameters
         # TODO - replace with yaml parameters
-        self.can_diameter_min = 35       # [units are pixels]
-        self.can_diameter_max = 40       # [units are pixels]
-        self.bottle_diameter_min = 25    # [units are pixels]
-        self.bottle_diameter_max = 29    # [units are pixels]
-        # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
-        # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
-        # self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
-        # self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")       # Initializing bottles maximum diameter [pixels]
+        # self.can_diameter_min = 35       # [units are pixels]
+        # self.can_diameter_max = 40       # [units are pixels]
+        # self.bottle_diameter_min = 25    # [units are pixels]
+        # self.bottle_diameter_max = 29    # [units are pixels]
+        self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
+        self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
+        self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
+        self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")       # Initializing bottles maximum diameter [pixels]
 
         # Object Type Definitions
         # TODO - replace with yaml parameters
-        self.ERROR = -1     # Initializing object type - error
-        self.BOTTLE = 0     # Initializing object type - bottle
-        self.CAN = 1        # Initializing object type - can
-        # self.ERROR = rospy.get_param("ERROR")       # Initializing object type - error
-        # self.BOTTLE = rospy.get_param("BOTTLE")     # Initializing object type - bottle
-        # self.CAN = rospy.get_param("CAN")           # Initializing object type - can
+        # self.ERROR = -1     # Initializing object type - error
+        # self.BOTTLE = 0     # Initializing object type - bottle
+        # self.CAN = 1        # Initializing object type - can
+        self.ERROR = rospy.get_param("ERROR")       # Initializing object type - error
+        self.BOTTLE = rospy.get_param("BOTTLE")     # Initializing object type - bottle
+        self.CAN = rospy.get_param("CAN")           # Initializing object type - can
         
         # self.R = rospy.get_param("~pub_freq")           # initializing the frequency at which to publish messages
         self.rate = rospy.Rate(100)
