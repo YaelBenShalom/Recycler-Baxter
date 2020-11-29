@@ -16,14 +16,33 @@ The Baxter in action:
 
 ![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/videos/Baxter_sorting.gif)
 
+## User Guide
 
-## Installation
+### Dependencies Installation
+Install the Intel Realsense packages as specified at the following link. The libraries are required while the developer and debug packages are on https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages
 
-### Dependencies
+### Quickstart Guide
+...
 
-Install the Intel Realsense packages as specified at the following link. The libraries are required while the developer and debug packages are not https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages
+## System Architecture and High Level Concepts
 
-## Use
+### Nodes
+**object_detection** - Object detection node...
 
+**recycle** - Robot operation node...
 
+### Launchfiles
+**baxter_move.launch** - The project launchfile...
 
+**camera.launch** - The camera launchfile...
+
+### Algorithms and Libraries Used
+**OpenCV** - Computer vision library...
+
+**MoveIt** - Motion planning library...
+
+**Joint Trajectory Action Server** - ...
+
+## Future Work
+1. Use machine learning algorithms to detect and classify the objects.
+2. Add the ability to detect more types of items.
