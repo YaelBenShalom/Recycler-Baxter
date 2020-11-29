@@ -67,6 +67,7 @@ The `object_detection` node uses this library to convert the points found on the
 The testfile tests the calibration accuracy using 2 known calibration points:
 1. point1 = [722.5, 937.5] (pixels) = [0.55, -0.50] (meters)
 2. point2 = [403.5, 417.5] (pixels) = [0.80, -0.10] (meters)
+
 The pixels values were measured from the image and the meters values were measured in the lab.
 
 To run the testfile when running catkin_make, run `catkin_make run_tests`.
