@@ -11,7 +11,7 @@ import baxter_core_msgs
 import baxter_interface
 import std_msgs.msg
 import cv2
-import cv_bridge 
+import cv_bridge
 import intera_interface
 from subprocess import call
 from geometry_msgs.msg import PoseStamped, Pose, Point, Quaternion
@@ -25,81 +25,85 @@ from can_sort.srv import Board, BoardResponse
 from sensor_msgs.msg import Image
 from can_sort.srv import DisplayImage, DisplayImageResponse
 
+
 class Recycle:
     def __init__(self):
-        '''Initialize environment'''
-    
-        #Initialized baxter
+        """ Initialize environment
+        """
+        # Initialized baxter
         baxter_interface.robot_enable.RobotEnable()
         rospy.loginfo('Baxter enabled!')
-        
+
         moveit_commander.roscpp_initialize(sys.argv)
         self.robot = moveit_commander.RobotCommander()
         self.scene = moveit_commander.PlanningSceneInterface()
         self.display_img = rospy.ServiceProxy('display_image', DisplayImage)
 
-        #Right arm (Using this arm)
-        self.right_group = moveit_commander.MoveGroupCommander("right_arm", wait_for_servers=10) 
+        # Right arm (Using this arm)
+        self.right_group = moveit_commander.MoveGroupCommander("right_arm", wait_for_servers=10)
         self.right_group.set_goal_position_tolerance(0.001)
         self.right_group.set_goal_orientation_tolerance(0.01)
         self.right_group.set_num_planning_attempts(5)
 
-        #Right gripper
+        # Right gripper
         self.right_gripper = Gripper('right')
         self.right_gripper.type() == 'electric'
         self.right_gripper.calibrate()
         self.right_gripper.open()
 
         self.default_gripper_orientation = Quaternion(1.0, 0, 0, 0)
-        
-        #Soda can gripping height for table
+
+        # Soda can gripping height for table
         self.can_z = -0.11
 
-        #Soda bin position, both bins on the robot's right
+        # Soda bin position, both bins on the robot's right
         self.can_bin_x = 0.2
         self.can_bin_y = -0.9
 
-        #Bottle gripping height for table
-        self.bottle_z = -0.05 
+        # Bottle gripping height for table
+        self.bottle_z = -0.05
 
-        #Soda bin position, both on the robot's right
+        # Soda bin position, both on the robot's right
         self.bottle_bin_x = 0.5
         self.bottle_bin_y = -0.85
-        
-        #Clearence height to ensure no collisions
-        self.clearence_z = 0.2; 
-        
-        #Robot home position
+
+        # Clearance height to ensure no collisions
+        self.clearance_z = 0.2
+
+        # Robot home position
         self.home_x = 0.65
         self.home_y = -0.45
-        self.home_z = self.clearence_z
+        self.home_z = self.clearance_z
 
         self.obj_type_list = []
         self.obj_x_list = []
         self.obj_y_list = []
-        
-        #Call inital functions
+
+        # Call initial functions
         # self.right_group.set_planning_time(seconds = 15)
-        # retime_trajectory() 
+        # runtime_trajectory()
         self.add_box()
-        self.get_image() 
+        self.get_image()
         self.initialize_pos()
 
         # call(["rosnode", "kill", "object_detection"])
 
-        self.objects_found =  True
+        self.objects_found = True
         rospy.sleep(1)
 
         while not rospy.is_shutdown():
-            try:   
-                if self.objects_found: #res.objects_found
-                    object_count = len(self.obj_type_list) #res.obj_type_list
+            try:
+                if self.objects_found:  # res.objects_found
+                    object_count = len(self.obj_type_list)  # res.obj_type_list
                     current_object_number = 0
                     while current_object_number < object_count:
                         print('Picking up object number %d \n' % current_object_number)
-                        self.move_to_object(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
+                        self.move_to_object(self.obj_type_list[current_object_number],
+                                            self.obj_x_list[current_object_number],
+                                            self.obj_y_list[current_object_number])
                         self.grasp_object(self.obj_type_list[current_object_number])
-                        self.move_to_bin(self.obj_type_list[current_object_number],self.obj_x_list[current_object_number],self.obj_y_list[current_object_number])
+                        self.move_to_bin(self.obj_type_list[current_object_number],
+                                         self.obj_x_list[current_object_number], self.obj_y_list[current_object_number])
                         self.move_to_home()
                         print('Picked object number %d \n' % current_object_number)
                         current_object_number += 1
@@ -108,54 +112,53 @@ class Recycle:
                     print("No objects found")
             except (rospy.ServiceException, rospy.ROSException) as e:
                 rospy.logerr("Service call failed: %s" % e)
-    
+
     def add_box(self):
-        '''
-        Add table to planning scene
-        '''
+        """ Add table and trash bins to planning scene
+        """
+        box_name = "table"
+        box_pose = PoseStamped()
+        box_pose.header.frame_id = "base"
+        box_pose.pose.position.x = 1.2  # This will change depending on how far the table is from the Baxter
+        box_pose.pose.position.y = -0.35
+        box_pose.pose.position.z = -0.55
+        box_pose.pose.orientation.w = 1.0
+        # Dimension
+        self.scene.add_box(box_name, box_pose, size=(1.83, 0.75, 0.75))
 
-        self.box_name = "table"
-        self.box_pose = PoseStamped()
-        self.box_pose.header.frame_id = "base"
-        self.box_pose.pose.position.x = 1.2 ## This will change depending on how far the table is from the Baxter
-        self.box_pose.pose.position.y = -0.35
-        self.box_pose.pose.position.z = -0.55
-        self.box_pose.pose.orientation.w = 1.0
-        #Dimension
-        self.scene.add_box(self.box_name,self.box_pose,size =(1.83,0.75,0.75))
+        bin1_name = "can_bin"  # Closer to the robot
+        bin1_pose = PoseStamped()
+        bin1_pose.header.frame_id = "base"
+        bin1_pose.pose.position.x = 0.3  # This will change depending on how far the bin is from the Baxter
+        bin1_pose.pose.position.y = -1.0
+        bin1_pose.pose.position.z = -0.55
+        bin1_pose.pose.orientation.w = 1.0
+        # Dimension
+        self.scene.add_box(bin1_name, bin1_pose, size=(0.3, 0.52, 0.77))
 
-        self.bin1_name = "can_bin" #Closer to the robot
-        self.bin1_pose = PoseStamped()
-        self.bin1_pose.header.frame_id = "base"
-        self.bin1_pose.pose.position.x = 0.3 ## This will change depending on how far the table is from the Baxter
-        self.bin1_pose.pose.position.y = -1.0
-        self.bin1_pose.pose.position.z = -0.55
-        self.bin1_pose.pose.orientation.w = 1.0
-        #Dimension
-        self.scene.add_box(self.bin1_name,self.bin1_pose,size =(0.3,0.52,0.77))
-
-
-        self.bin2_name = "bottle_bin"
-        self.bin2_pose = PoseStamped()
-        self.bin2_pose.header.frame_id = "base"
-        self.bin2_pose.pose.position.x = 0.65 ## This will change depending on how far the table is from the Baxter
-        self.bin2_pose.pose.position.y = -1.0
-        self.bin2_pose.pose.position.z = -0.55
-        self.bin2_pose.pose.orientation.w = 1.0
-        #Dimension
-        self.scene.add_box(self.bin2_name,self.bin2_pose,size =(0.3,0.52,0.77))
+        bin2_name = "bottle_bin"  # Farther from the robot
+        bin2_pose = PoseStamped()
+        bin2_pose.header.frame_id = "base"
+        bin2_pose.pose.position.x = 0.65  # This will change depending on how far the bin is from the Baxter
+        bin2_pose.pose.position.y = -1.0
+        bin2_pose.pose.position.z = -0.55
+        bin2_pose.pose.orientation.w = 1.0
+        # Dimension
+        self.scene.add_box(bin2_name, bin2_pose, size=(0.3, 0.52, 0.77))
 
     def get_image(self):
+        """ Getting board state from the board_state service
+        """
         # move arm to a good position before the initial poses
         right = baxter_interface.Limb('right')
 
-        rcmd = {"right_e0":0.07593204900032798,
-                "right_e1":1.3479856173543072,
-                "right_s0":-0.5629709491539469,
-                "right_s1":-0.9211554631251909, 
-                "right_w0":3.0104372962251245,
-                "right_w1":-1.0971797585350422,
-                "right_w2":-0.09088836168221076}
+        rcmd = {"right_e0": 0.07593204900032798,
+                "right_e1": 1.3479856173543072,
+                "right_s0": -0.5629709491539469,
+                "right_s1": -0.9211554631251909,
+                "right_w0": 3.0104372962251245,
+                "right_w1": -1.0971797585350422,
+                "right_w2": -0.09088836168221076}
 
         right.move_to_joint_positions(rcmd)
 
@@ -164,18 +167,18 @@ class Recycle:
         # self.obj_type_list = ["soda", "bottle", "soda", "bottle"]
 
         # Insert picture stuff here
-        self.get_obj_pos = rospy.ServiceProxy('board_state', Board)
-        self.object_listy = self.get_obj_pos(use_real = True)
-        print(f" found {len(self.object_listy.objects)} objects")
+        get_obj_pos = rospy.ServiceProxy('board_state', Board)
+        object_list = self.get_obj_pos(use_real=True)
+        print(f" found {len(object_list.objects)} objects")
 
-        for item in self.object_listy.objects:
-                self.obj_x_list.append(item.location.x)
-                self.obj_y_list.append(item.location.y)
-                if item.type == 0:
-                    self.obj_type_list.append("bottle")
-                else:
-                    self.obj_type_list.append("soda")
-        
+        for item in object_list.objects:
+            self.obj_x_list.append(item.location.x)
+            self.obj_y_list.append(item.location.y)
+            if item.type == 0:
+                self.obj_type_list.append("bottle")
+            else:
+                self.obj_type_list.append("soda")
+
         print(f"x list {self.obj_x_list}")
         print(f"y list {self.obj_y_list}")
         print(f"type list is {self.obj_type_list}")
@@ -184,26 +187,29 @@ class Recycle:
         rospy.sleep(2)
 
     def initialize_pos(self):
-        # move arm to a good position before the initial poses
+        """ Move arm to a initial position before the initial poses
+        The initial position ensures no interference to the image
+        """
         right = baxter_interface.Limb('right')
 
-        rcmd = {"right_e0":0.584830175381314,
-                "right_e1":1.601475942552372,
-                "right_s0":0.12732040539448933,
-                "right_s1":-1.19573802415668,
-                "right_w0":2.923000391315656,
-                "right_w1":-1.2225826879446748,
-                "right_w2":-0.033364082136507746}
-
+        rcmd = {"right_e0": 0.584830175381314,
+                "right_e1": 1.601475942552372,
+                "right_s0": 0.12732040539448933,
+                "right_s1": -1.19573802415668,
+                "right_w0": 2.923000391315656,
+                "right_w1": -1.2225826879446748,
+                "right_w2": -0.033364082136507746}
 
         right.move_to_joint_positions(rcmd)
         # self.display_img(img_num = 5)
 
-    def move_to_home(self):  #Move to home position  
+    def move_to_home(self):
+        """ This function moves the robot's arm to the home position
+        """
         print("Moving to the home position")
-        #Set pose for move to home x,y,z position
+        # Set pose for move to home x,y,z position
         home_pose = Pose()
-        home_pose.position = Point(self.home_x,self.home_y,self.home_z)
+        home_pose.position = Point(self.home_x, self.home_y, self.home_z)
         home_pose.orientation = self.default_gripper_orientation
         waypoints = [home_pose]
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.1, 0.0)
@@ -212,52 +218,52 @@ class Recycle:
         print(f"time is {time}")
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
-        self.right_group.clear_pose_targets() 
+        self.right_group.clear_pose_targets()
         print('At the home position')
         rospy.sleep(1)
         waypoints = []
 
-        
-    def move_to_object(self,obj_type,obj_x,obj_y):
-
+    def move_to_object(self, obj_type, obj_x, obj_y):
+        """ This function moves the robot's arm to a given position
+        """
         print("Moving to object perch position")
         if obj_type == "soda":
-            self.display_img(img_num = 2)
+            self.display_img(img_num=2)
         else:
-            self.display_img(img_num = 3)
+            self.display_img(img_num=3)
 
         waypoints = []
-        
-        #Move to object x,y position at clearence z height
-        obj_pose = Pose()
-        obj_pose.position = Point(obj_x,obj_y,self.clearence_z)    #Example position
-        obj_pose.orientation = self.default_gripper_orientation
-        waypoints.append(obj_pose)
 
-        #Move down in z to object height
+        # Move to object x,y position at clearance z height
+        self.obj_pose = Pose()
+        self.obj_pose.position = Point(obj_x, obj_y, self.clearance_z)  # Example position
+        self.obj_pose.orientation = self.default_gripper_orientation
+        waypoints.append(self.obj_pose)
+
+        # Move down in z to object height
         print("Moving to the perch position")
         self.obj_pose = Pose()
-        if  obj_type == "soda":
-            self.obj_pose.position = Point(obj_x,obj_y,self.can_z)    #Example position
+        if obj_type == "soda":
+            self.obj_pose.position = Point(obj_x, obj_y, self.can_z)  # Example position
             self.obj_pose.orientation = self.default_gripper_orientation
-    
+
             mid_pose = Pose()
-            mid_pose.position = Point(obj_x,obj_y,(self.can_z + 0.05)) 
+            mid_pose.position = Point(obj_x, obj_y, (self.can_z + 0.05))
             mid_pose.orientation = self.default_gripper_orientation
 
         else:
-            self.obj_pose.position = Point(obj_x,obj_y,self.bottle_z)    #Example position
+            self.obj_pose.position = Point(obj_x, obj_y, self.bottle_z)  # Example position
             self.obj_pose.orientation = self.default_gripper_orientation
 
             mid_pose = Pose()
-            mid_pose.position = Point(obj_x,obj_y,(self.bottle_z + 0.05)) 
+            mid_pose.position = Point(obj_x, obj_y, (self.bottle_z + 0.05))
             mid_pose.orientation = self.default_gripper_orientation
 
         waypoints.append(mid_pose)
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
-        self.right_group.clear_pose_targets()  
+        self.right_group.clear_pose_targets()
         print("At the perch position")
         rospy.sleep(1)
         waypoints = []
@@ -266,91 +272,95 @@ class Recycle:
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
-        self.right_group.clear_pose_targets()  
+        self.right_group.clear_pose_targets()
         print("At the grasping position")
         rospy.sleep(1)
         waypoints = []
 
-    def grasp_object(self,obj_type):  
-        
-        if  obj_type == "soda":
-            self.right_gripper.command_position(50) #For grippers at spot 2&4 and 3
+    def grasp_object(self, obj_type):
+        """ This function makes the robot's arm grasp an object, depends on the object's type
+        """
+        if obj_type == "soda":
+            self.right_gripper.command_position(50)  # For grippers at spot 2&4 and 3
             rospy.sleep(1)
         else:
-            self.right_gripper.command_position(0) #For gripper at spots 2&4 and 3
-            
+            self.right_gripper.command_position(0)  # For gripper at spots 2&4 and 3
+
             rospy.sleep(1)
         print("Closed the gripper")
 
-            
-    def move_to_bin(self,obj_type,obj_x,obj_y):
-        self.display_img(img_num = 1)
+    def move_to_bin(self, obj_type, obj_x, obj_y):
+        """ This function moves the robot's arm to the appropriate trash bin (depends on the objects type)
+        """
+        self.display_img(img_num=1)
         waypoints = []
-        
-        #Move to object x,y position at clearence z height
+
+        # Move to object x,y position at clearance z height
         raised_pose = Pose()
-        raised_pose.position = Point(obj_x,obj_y,self.clearence_z)  
+        raised_pose.position = Point(obj_x, obj_y, self.clearance_z)
         raised_pose.orientation = self.default_gripper_orientation
         waypoints.append(raised_pose)
 
-        #Move back to the home position to ensure a safe path to the bin
+        # Move back to the home position to ensure a safe path to the bin
         mid_pose = Pose()
-        if  obj_type == "soda":
-            mid_pose.position = Point(self.home_x, self.home_y, self.clearence_z)
-            mid_pose.orientation =  self.default_gripper_orientation
+        if obj_type == "soda":
+            mid_pose.position = Point(self.home_x, self.home_y, self.clearance_z)
+            mid_pose.orientation = self.default_gripper_orientation
         else:
-            mid_pose.position = Point(self.home_x, self.home_y, self.clearence_z)
-            mid_pose.orientation =  self.default_gripper_orientation
+            mid_pose.position = Point(self.home_x, self.home_y, self.clearance_z)
+            mid_pose.orientation = self.default_gripper_orientation
 
         waypoints.append(mid_pose)
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
-        # self.right_group.retime_trajectory(ref_state_in = self.obj_pose, traj_in = plan, velocity_scaling_factor = 1.0, acceleration_scaling_factor = 1.0, algorithm = "iterative_time_parameterization")
-        #allowed executition duration scaling
-        #allowed goal duration margin
-        #fork baxter move it config
-        #trajectory_execution.launch
+        # self.right_group.runtime_trajectory(ref_state_in=self.obj_pose, traj_in=plan,
+        #                                    velocity_scaling_factor=1.0, acceleration_scaling_factor=1.0,
+        #                                    algorithm="iterative_time_parameterization")
+        # allowed execution duration scaling
+        # allowed goal duration margin
+        # fork baxter move it config
+        # trajectory_execution.launch
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
-        self.right_group.clear_pose_targets() 
+        self.right_group.clear_pose_targets()
         rospy.sleep(1)
-        waypoints = [] 
-        
-        #Move Object to corresponding bin
+        waypoints = []
+
+        # Move Object to corresponding bin
         bin_pose = Pose()
-        if  obj_type == "soda":
-            bin_pose.position = Point(self.can_bin_x,self.can_bin_y,self.clearence_z)
-            # bin_pose.position = Point(self.bottle_bin_x,self.bottle_bin_y,self.clearence_z) 
-            bin_pose.orientation =  self.default_gripper_orientation
+        if obj_type == "soda":
+            bin_pose.position = Point(self.can_bin_x, self.can_bin_y, self.clearance_z)
+            # bin_pose.position = Point(self.bottle_bin_x,self.bottle_bin_y,self.clearance_z)
+            bin_pose.orientation = self.default_gripper_orientation
         else:
-            bin_pose.position = Point(self.bottle_bin_x,self.bottle_bin_y,self.clearence_z)    #Example position
-            bin_pose.orientation =  self.default_gripper_orientation
-        
+            bin_pose.position = Point(self.bottle_bin_x, self.bottle_bin_y, self.clearance_z)  # Example position
+            bin_pose.orientation = self.default_gripper_orientation
+
         waypoints.append(bin_pose)
         print("Go to bin")
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
-        self.right_group.clear_pose_targets()   
+        self.right_group.clear_pose_targets()
         print("At bin")
         rospy.sleep(1)
         waypoints = []
-        
-        #Drop Object
+
+        # Drop Object
         self.right_gripper.open()
         print("Open gripper")
-        self.display_img(img_num = 4)
+        self.display_img(img_num=4)
         rospy.sleep(1)
         print('Object Recycled')
-        #Remove Object from Robot
+        # Remove Object from Robot
 
 
 def main():
-    """ 
-    The main() function. 
+    """ The main() function.
     """
     rospy.init_node('baxter_recycle', log_level=rospy.DEBUG)
     mover = Recycle()
     rospy.spin()
+
 
 if __name__ == '__main__':
     try:

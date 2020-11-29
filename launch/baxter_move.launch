@@ -11,7 +11,7 @@
   <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py" />
   </group>
 
-  <!--Node for objectdetection, false by default (used for CV testing) -->
+  <!--Node for object_detection, false by default (used for CV testing) -->
    <group if="$(arg object_detection)">
    <node name="object_detection" pkg="can_sort" type="object_detection.py" />
    </group>

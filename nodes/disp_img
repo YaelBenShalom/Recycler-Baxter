@@ -36,15 +36,15 @@ import cv_bridge
 from sensor_msgs.msg import Image
 from can_sort.srv import DisplayImage, DisplayImageResponse
 
-class Display_Image():
 
+class Display_Image:
     def __init__(self):
-
+        """ Initialize environment
+        """
         self.display_srv = rospy.Service('display_image', DisplayImage, self.send_image_srv)
         rospy.logdebug(f"Service initialized")
 
-
-    def send_image_srv(self,req):
+    def send_image_srv(self, req):
         """
         Send the image located at the specified path to the head
         display on Baxter.
@@ -79,8 +79,9 @@ def main():
     display = Display_Image()
     rospy.spin()
 
+
 if __name__ == '__main__':
     try:
-        main()  
+        main()
     except rospy.ROSInterruptException:
         pass

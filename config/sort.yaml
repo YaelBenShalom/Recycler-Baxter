@@ -2,6 +2,8 @@
   BOTTLE: 0
   CAN: 1
 
+  calibration_diameter_min: 10
+  calibration_diameter_max: 20
   can_diameter_min: 35
   can_diameter_max: 40
   bottle_diameter_min: 25

@@ -1,12 +1,12 @@
-#Just a file for theoretical sudo code
+# Just a file for theoretical sudo code
 
-#Have location of bottle
-#Have bottle type 
-#Start in Home position
+# Have location of bottle
+# Have bottle type
+# Start in Home position
 
 1. Move hand to x,y location above bottle (high z)
 
-2. Orient gripper (grasp from side or top). Want pelnty of clearence to the bottle
+2. Orient gripper (grasp from side or top). Want plenty of clearance to the bottle
 
 3. Move arm to appropriate Z-height
 
@@ -14,7 +14,7 @@
 
 5. Lift bottle straight up to high z height (to clear all other bottles)
 
-6. Move to x,y position of the apppropriate bin
+6. Move to x,y position of the appropriate bin
 
 7. Release bottle
 
