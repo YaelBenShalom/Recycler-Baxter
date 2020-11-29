@@ -23,7 +23,7 @@ from sensor_msgs.msg import Image
 from can_sort.msg import Object
 from can_sort.srv import Board, BoardResponse
 import pyrealsense2 as rs
-# from can_sort.calibration import Calibration # TODO
+from can_sort.calibration import Calibration # TODO
 
 
 class Detect():
@@ -86,9 +86,8 @@ class Detect():
         config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 6)
 
         # Recording video to bagfile
-        config.enable_record_to_file("most_update_video")  # Comment this if you want to work of saved bagfile
-        # config.enable_device_from_file("camera_video")  # Uncomment this if you want to work of saved bagfile
-        # config.enable_device_from_file("bagfiles/camera_video")  # Uncomment this if you want to work of saved bagfile
+        # config.enable_record_to_file("most_update_video")  # Comment this if you want to work of saved bagfile
+        config.enable_device_from_file("most_update_video")  # Uncomment this if you want to work of saved bagfile
 
         # Start streaming
         pipeline.start(config)
@@ -107,6 +106,8 @@ class Detect():
                 # Convert image to numpy array
                 self.img = np.asanyarray(color_frame.get_data())
                 height, width = self.img.shape[:2]
+
+                # resize image
                 self.img = cv.resize(self.img, (int(2*width), int(2*height)), interpolation = cv.INTER_CUBIC)
                 self.img = self.img[500:1500, 1500:2700]
 
@@ -114,6 +115,7 @@ class Detect():
                 if self.img is None: 
                     sys.exit("""could not read the image""")
 
+                # Find calibration points - green
                 paint_image = self.paint_circles(self.img, self.img, (0, 255, 0), 10, 20)
 
                 # Find cans - blue
@@ -154,10 +156,10 @@ class Detect():
         img = self.img
         self.objects = []
 
-        # self.detect_calibration_points(img) # TODO
+        self.detect_calibration_points(img) # TODO
 
         response = BoardResponse()
-        if len(self.detect_cans(img)) !=0:
+        if len(self.detect_cans(img)) != 0:
           self.objects.extend(self.detect_cans(img))
         if len(self.detect_bottles(img)) != 0:
           self.objects.extend(self.detect_bottles(img))
@@ -167,19 +169,20 @@ class Detect():
         return response
 
 
-    # def detect_calibration_points(self, image):  # TODO
-    #     """! This function detects bottles located on the table.
-    #     Inputs:
-    #       Image (img) - the stored image.
+    def detect_calibration_points(self, image):  # TODO
+        """! This function detects bottles located on the table.
+        Inputs:
+          Image (img) - the stored image.
         
-    #     Returns:
-    #       Bottles (list) - A list of bottles' state
-    #                       (type - BOTTLE, sorted - False, location)
-    #     """
-    #     rospy.logdebug(f"Detecting Calibration Points")
-    #     circles = self.detect_circles(image, 10, 20)
-    #     print ("circles: ", circles)
-    #     return self.a, self.b, self.m, self.n
+        Returns:
+          Bottles (list) - A list of bottles' state
+                          (type - BOTTLE, sorted - False, location)
+        """
+        rospy.logdebug(f"Detecting Calibration Points")
+        circles = self.detect_circles(image, 10, 20)
+        print ("calibration circles: ", circles)
+        self.calibration = Calibration(circles[0][1], circles[0][0])
+        self.a, self.b, self.m, self.n = self.calibration.convert_position()
 
 
     def detect_cans(self, image):
@@ -198,10 +201,10 @@ class Detect():
         for c in circles[0]:
             can = Object()
             can.type = self.CAN
-            can.sorted = False 
-            can.location.x = -0.000780212*c[1] + 1.112115
-            can.location.y = -0.0007730055*c[0] + 0.2219635
-            can.location.z = -1 # This value will be overwrite be the motion node
+            can.sorted = False
+            can.location.x = self.m*c[1] + self.n
+            can.location.y = self.a*c[0] + self.b
+            can.location.z = 0. # This value will be overwrite be the motion node
             cans.append(can)
 
         return cans
@@ -223,10 +226,10 @@ class Detect():
         for c in circles[0]:
             bottle = Object()
             bottle.type = self.BOTTLE
-            bottle.sorted = False 
-            bottle.location.x = -0.000780212*c[1] + 1.112115
-            bottle.location.y = -0.0007730055*c[0] + 0.2219635
-            bottle.location.z = -1 # This value will be overwrite be the motion node
+            bottle.sorted = False
+            bottle.location.x = self.m*c[1] + self.n
+            bottle.location.y = self.a*c[0] + self.b
+            bottle.location.z = 0. # This value will be overwrite be the motion node
             bottles.append(bottle)
             
         return bottles

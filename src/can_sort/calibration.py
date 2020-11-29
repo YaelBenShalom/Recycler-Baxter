@@ -10,22 +10,35 @@ from sympy import symbols, Eq, solve
 
 
 class Calibration():
-    def __init__(self, x1_pix, y1_pix, x2_pix, y2_pix):
-        pass
+    def __init__(self, point1, point2):
+        # Extracting x and y components from the points (x and y axis are different between the cmera and the robot. z is not relevant)
+        self.y1_pix, self.x1_pix, _ = point1
+        self.y2_pix, self.x2_pix, _ = point2
 
-    def convert_position(self, x1_pix, y1_pix, x2_pix, y2_pix):
+
+    def convert_position(self):
         """ this function takes the coordinated of 2 calibration points in pixels,
         and converts it to meters using linearization.
+        By measuring in the lab, we know that the locations of the calibration points in meters
+        are (0.51, -0.54) and (0.84, 0.06).
         """
+        # Defininig the linearization constants as symbols
         a, b, m, n = symbols(r'a, b, m, n')
-        eq_x1 = Eq(x1_pix*m + n, 0.51)
-        eq_x2 = Eq(x2_pix*m + n, 0.84)
+
+        # Equations for the x components (equal to the known x component in meters)
+        eq_x1 = Eq(self.x1_pix*m + n, 0.51)
+        eq_x2 = Eq(self.x2_pix*m + n, 0.84)
         
-        solve((eq_x1, eq_x2), (m, n))
+        # Solving the linearization equation for x to find the linearization constants for y
+        sol_x = solve((eq_x1, eq_x2), (m, n))
+        m, n = sol_x[m], sol_x[n]
 
-        eq_y1 = Eq(y1_pix*a + b, -0.54)
-        eq_y2 = Eq(y2_pix*a + b, -0.06)
+        # Equations for the y components (equal to the known y component in meters)
+        eq_y1 = Eq(self.y1_pix*a + b, -0.54)
+        eq_y2 = Eq(self.y2_pix*a + b, -0.06)
 
-        solve((eq_y1, eq_y2), (a, b))
+        # Solving the linearization equation for y to find the linearization constants for x
+        sol_y = solve((eq_y1, eq_y2), (a, b))
+        a, b = sol_y[a], sol_y[b]
 
         return a, b, m, n
