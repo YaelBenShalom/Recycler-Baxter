@@ -7,7 +7,7 @@ from can_sort.calibration import Calibration
 
 
 class TestCalibration(unittest.TestCase):
-    """ Checks the python calibration library
+    """ Tests the python calibration library
     """
     def __init__(self, *args, **kwargs):
         """ Initialize environment
