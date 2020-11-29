@@ -51,6 +51,10 @@ The robot motion:
 ![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/videos/Baxter_sorting2.gif)
 
 
+**disp_img.py** - Displays an image on the Baxter's head display.
+The node converts the image to imgmsg (using OpenCV), and publishes the message to the `/robot/xdisplay` display using `DisplayImage.srv` service.
+
+
 **calibration.py** - Python library that responsible for the calibration of the camera's output (converts a point from pixels to meters).
 The script gets the coordinated of 2 calibration points in pixels, and converts
 it to meters, using linearization.
