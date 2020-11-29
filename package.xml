@@ -8,7 +8,7 @@
     <maintainer email="kaileysmith2021@u.northwestern.edu">Kailey Smith</maintainer>
     <maintainer email="yaelbenshalom@u.northwestern.edu">Yael Ben Shalom</maintainer>
     <maintainer email="mingqingyuan2021@u.northwestern.edu">Mingqing Yuan</maintainer>
-    <maintainer email="jketchum@u.northwestern.edu">Jake</maintainer>
+    <!-- <maintainer email="">Chris</maintainer> -->
     <license>MIT</license>
 
     <!-- Dependenceis needed to build this package -->
