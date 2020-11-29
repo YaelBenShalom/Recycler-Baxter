@@ -39,11 +39,13 @@ The painted image:
 
 ![Computer_vision](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/computer_vision.png)
 
+
 **recycle** - Robot operation node...
 
 The robot motion:
 
 ![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/videos/Baxter_sorting2.gif)
+
 
 **calibration.py** - Python library that responsible for the calibration of the camera's output (converts a point from pixels to meters).
 The script gets the coordinated of 2 calibration points in pixels, and converts
@@ -51,12 +53,14 @@ it to meters, using linearization.
 The library returns the linearization constants:
 - x(meters) = m * x(pixels) + n
 - y(meters) = a * y(pixels) + b
+
 The `object_detection` node uses this library to convert the points found on the image from pixels to meters.
 
 ### Launchfiles
 **baxter_move.launch** - The project launchfile...
 
 **camera.launch** - The camera launchfile...
+
 
 ### Test files
 **test_calibration.py** - A test file that tests the python calibration library.
@@ -67,6 +71,7 @@ The pixels values were measured from the image and the meters values were measur
 
 To run the testfile when running catkin_make, run `catkin_make run_tests`.
 
+
 ### Algorithms and Libraries Used
 **pyrealsense2** - Library for accessing Intel RealSenseTM cameras.
 
@@ -76,6 +81,7 @@ To run the testfile when running catkin_make, run `catkin_make run_tests`.
 
 **JTAS** - Joint Trajectory Action Server. Enables executing complex trajectories using software built-in to Baxter
 
+
 ### Physical Equipment:
 1. Baxter Rethink robot
 2. Realsense D435i depth camera
@@ -83,6 +89,7 @@ To run the testfile when running catkin_make, run `catkin_make run_tests`.
 4. 2 trash bins
 4. Cans and bottles
 5. 3D printed grippers (see CAD image and drawing below)
+
 
 ## Future Work
 1. **Use machine learning algorithms for better objects classification** - Now, we can only classify specific shapes of bottles and cans. By using machine learning methods, we could classify different types of bottles and cans with the same lable, and throw them to the same trash bin.
