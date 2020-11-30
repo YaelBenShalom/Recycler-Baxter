@@ -39,7 +39,7 @@ class Recycle:
         self.scene = moveit_commander.PlanningSceneInterface()
         self.display_img = rospy.ServiceProxy('display_image', DisplayImage)
 
-        # Right arm (Using this arm)
+        # Right arm
         self.right_group = moveit_commander.MoveGroupCommander("right_arm", wait_for_servers=10)
         self.right_group.set_goal_position_tolerance(0.001)
         self.right_group.set_goal_orientation_tolerance(0.01)
@@ -78,17 +78,13 @@ class Recycle:
         self.obj_type_list = []
         self.obj_x_list = []
         self.obj_y_list = []
+        self.objects_found = True
 
         # Call initial functions
-        # self.right_group.set_planning_time(seconds = 15)
-        # runtime_trajectory()
         self.add_box()
         self.get_image()
         self.initialize_pos()
 
-        # call(["rosnode", "kill", "object_detection"])
-
-        self.objects_found = True
         rospy.sleep(1)
 
         while not rospy.is_shutdown():
@@ -312,13 +308,6 @@ class Recycle:
 
         waypoints.append(mid_pose)
         (plan, fraction) = self.right_group.compute_cartesian_path(waypoints, 0.01, 0.0)
-        # self.right_group.runtime_trajectory(ref_state_in=self.obj_pose, traj_in=plan,
-        #                                    velocity_scaling_factor=1.0, acceleration_scaling_factor=1.0,
-        #                                    algorithm="iterative_time_parameterization")
-        # allowed execution duration scaling
-        # allowed goal duration margin
-        # fork baxter move it config
-        # trajectory_execution.launch
         self.right_group.execute(plan, wait=True)
         self.right_group.stop()
         self.right_group.clear_pose_targets()

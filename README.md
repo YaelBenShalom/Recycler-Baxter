@@ -44,7 +44,20 @@ The painted image:
 ![Computer_vision](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/computer_vision.png)
 
 
-**recycle.py** - Robot operation node...
+**recycle.py** - Robot operation node. This node uses ROS's `MoveIt!` library for motion planning and manipulation (mainly the `compute_cartesian_path` command). After initalizing the move group commander for Baxter's right arm, this node adds a table to the planning scence to ensure that the robot does not collide with the table. A proxy `DisplayImage.srv` service is also created. The arm then moves to a predetermined position out of the camera's field of view and calls the `Board.srv` service. This service returns a list with the position and classification of all bottles and cans in the camera's view. In the last portion of the set-up the robot moves to a predetermined orientation to ensure smooth and predictable motion of the robot arm (This desired configuration was determined after extensive testing).
+
+With the objects locations and classifications known, the robot then works through a while loop for the entirety of the list length. The loop functions as follows:
+1. Move to the home position where the robot is safely above all objects.
+2. For the current item in the list, display either the can image or the bottle image, depending on the classification.
+3. Next, move to that objects x,y corrdinate at a safe z height away. This is the same height for bottles and cans
+4. Then move down to the appropriate perch height, depending on classification. (For example, the robot arm will be position further away from the table for bottle, since those are taller than cans).
+5. Once safely at the perch height, move down so that the object is cenerted in between the grippers. 
+6. Grasp the object.
+7. Move back up to the position as step 3.
+8. Move back to the home position. This step was added to ensure predictable behavior of the robot arm. 
+9. Depending on the objects classification, move to the appropriate bin. Also, display the recylcing image.
+10. Once over the bin, open the grippers and drop the object. Show that the object has been recycled with the bin image. 
+11. Repeat for all objects found. 
 
 The robot motion:
 
