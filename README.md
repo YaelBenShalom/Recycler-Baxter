@@ -117,16 +117,11 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
   * The grippers are dsigned to have 1/4" Thick Soft foam adhered to their inner radius, allowing the foam to conform to the bottle and provide extra grip.
   * Make sure to check the shrinkage of your 3D printer and scale the post cutouts appropriatetly so the attachments can attach to Baxter's stock Gripper Posts.
   * The CAD part and drawing files for the 3D Printed Gripper Attachment for Baxter can be found in the CAD Folder of this repository.
-  * They can also be exported from OnShape by following the link below:
-
-CAD and Drawing: https://cad.onshape.com/documents/55d17f6159ce035c20241bbe/w/991f13206933eabdd1713bd5/e/5e41ab8ba39d8543f1dda1ea
+  * They can also be exported from OnShape by following this link: [CAD and Drawing](https://cad.onshape.com/documents/55d17f6159ce035c20241bbe/w/991f13206933eabdd1713bd5/e/5e41ab8ba39d8543f1dda1ea)
 
 ![Gripper Diagram](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/Baxter%20Bottle-Can%20Gripper%20Diagram.png)
 
 ![Gripper Drawing](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/Baxter%20Bottle-Can%20Gripper%20Attachment%20Drawing.png)
-
-
-
 
 
 ## Future Work
