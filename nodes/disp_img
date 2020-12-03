@@ -52,19 +52,19 @@ class Display_Image:
         """
         #### WE WANT TO PASS A PATH INSTEAD OF USING THE ABOLUTE PATH
         if req.img_num == 1:
-            path = "/head_images/recycle.jpg"
+            path = "/images/head_images/recycle.jpg"
 
         elif req.img_num == 2:
-            path = "/head_images/dr_pepper.png"
+            path = "/images/head_images/dr_pepper.png"
 
         elif req.img_num == 3:
-            path = "/head_images/juice.png"
+            path = "/images/head_images/juice.png"
 
         elif req.img_num == 4:
-            path = "/head_images/happy_bin.png"
+            path = "/images/head_images/happy_bin.png"
 
         elif req.img_num == 5:
-            path = "/head_images/mystery_man.png"
+            path = "/images/head_images/mystery_man.png"
 
         img = cv2.imread(path)
         msg = cv_bridge.CvBridge().cv2_to_imgmsg(img, encoding="bgr8")
