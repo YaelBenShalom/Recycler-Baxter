@@ -112,12 +112,12 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
 4. 2 trash bins
 4. Cans and bottles
 5. 3D Printed Bottle/Can Gripper Atachments (see CAD image and drawing below)
-  This gripper was designed to work with most plastic bottles and aluminum cans.
-  The grippers are printed with PLA plastic, although most rigid 3D Printed materials would be appropriate. 
-  The grippers are dsigned to have 1/4" Thick Soft foam adhered to their inner radius, allowing the foam to conform to the bottle and provide extra grip.
-  Make sure to check the shrinkage of your 3D printer and scale the post cutouts appropriatetly so the attachments can attach to Baxter's stock Gripper Posts.
-  The CAD part and drawing files for the 3D Printed Gripper Attachment for Baxter can be found in the CAD Folder of this repository.
-  They can also be exported from OnShape by following the link below:
+  * This gripper was designed to work with most plastic bottles and aluminum cans.
+  * The grippers are printed with PLA plastic, although most rigid 3D Printed materials would be appropriate. 
+  * The grippers are dsigned to have 1/4" Thick Soft foam adhered to their inner radius, allowing the foam to conform to the bottle and provide extra grip.
+  * Make sure to check the shrinkage of your 3D printer and scale the post cutouts appropriatetly so the attachments can attach to Baxter's stock Gripper Posts.
+  * The CAD part and drawing files for the 3D Printed Gripper Attachment for Baxter can be found in the CAD Folder of this repository.
+  * They can also be exported from OnShape by following the link below:
 
 CAD and Drawing: https://cad.onshape.com/documents/55d17f6159ce035c20241bbe/w/991f13206933eabdd1713bd5/e/5e41ab8ba39d8543f1dda1ea
 
