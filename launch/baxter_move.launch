@@ -25,5 +25,5 @@
       <param name="trajectory_execution/allowed_execution_duration_scaling" value="200.0"/> <!-- default 1.5 -->
       <param name="trajectory_execution/allowed_goal_duration_margin" value="200.0"/> <!-- default 1.0 -->
   </include>
-  
+
 </launch>
