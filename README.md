@@ -111,9 +111,26 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
 3. Table
 4. 2 trash bins
 4. Cans and bottles
-5. 3D printed grippers (see CAD image and drawing below)
+5. 3D Printed Bottle/Can Gripper Atachments (see CAD image and drawing below)
+
+  -This gripper was designed to work with most blastic bottle and aluminum cans.
+  -The grippers are printed with PLA plastic, although most rigid 3D Printed materials would be appropriate. 
+  -The grippers are dsigned to have 1/4" Thick Soft foam adhered to their inner radius, allowing the foam to conform to the bottle and provide extra grip.
+  -Make sure to check the shrinkage of your 3D printer and scale the post cutouts appropriatetly so the attachments can attach to Baxter's stock Gripper Posts.
+  -The CAD part and drawing files for the 3D Printed Gripper Attachment for Baxter can be found in the CAD Folder of this repository.
+  -They can also be exported from OnShape by following the link below:
+
+CAD and Drawing: https://cad.onshape.com/documents/55d17f6159ce035c20241bbe/w/991f13206933eabdd1713bd5/e/5e41ab8ba39d8543f1dda1ea
+
+![Gripper Diagram](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/Baxter%20Bottle-Can%20Gripper%20Diagram.png)
+
+![Gripper Drawing](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/Baxter%20Bottle-Can%20Gripper%20Attachment%20Drawing.png)
+
+
+
 
 
 ## Future Work
 1. **Use machine learning algorithms for better objects classification** - Now, we can only classify specific shapes of bottles and cans. By using machine learning methods, we could classify different types of bottles and cans with the same label, and throw them to the same trash bin.
 2. **Add the ability to detect more types of items** - Now, we can only detect cans and bottles. In the future, we want to be able to detect and recycle a variety of objects, such as paper or different types of plastic. To do so, we need to improve our computer vision node (to detect those items), and improve our gripper.
+3. **Implement the 3D-Printed Grippers** - We did not end up having time to implement the 3D-Printed Grippers for our testing. Using the stock grippers did not provide a very secure grip - so we had to slow down the robot's motion to prevent the bottle from flying out. Using the 3D Printed Grippers with foam padding would allow for a more secure grip, which would let us speed the robot back up. It would also allow grabbing a greater variety of cylindrical objects (from the body) due to the foam's conformability.
