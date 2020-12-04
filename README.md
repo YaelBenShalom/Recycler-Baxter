@@ -79,7 +79,7 @@ The `object_detection` node uses this library to convert the points found on the
 
 
 ### Launchfiles
-**baxter_move.launch** - The project launch
+**baxter_move.launch** - This launch file launches both recyle node and object detection node. The recyle node runs along with joint_trajectory_server which is required in to plan the trajectory in MoveIt. Also, this launch file includes two files(baxter_grippers.launch and trajectory_execution.launch) from baxter_moveit_config which is in the MoveIt! Robots package. 
 
 **camera.launch** - The camera launchfile...
 
@@ -101,6 +101,8 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
 **OpenCV** - Computer vision library. Used to detect and classify the items on the image.
 
 **MoveIt** - Motion planning library. Used to generate high-degree of freedom trajectories to grab the objects and throw them to the trash bins.
+
+**[MoveIt! Robots](https://github.com/ros-planning/moveit_robots)** - Motion planning library. Used to 
 
 **JTAS** - Joint Trajectory Action Server. Enables executing complex trajectories using software built-in to Baxter
 
