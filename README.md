@@ -79,9 +79,9 @@ The `object_detection` node uses this library to convert the points found on the
 
 
 ### Launchfiles
-**baxter_move.launch** - This launch file launches both recyle node and object detection node. The recyle node runs along with joint_trajectory_server which is required in to plan the trajectory in MoveIt. Also, this launch file includes two files(baxter_grippers.launch and trajectory_execution.launch) from baxter_moveit_config which is in the MoveIt! Robots package. 
+**baxter_move.launch** - This launch file launches both recyle node and object_detection node. The recyle node runs along with joint_trajectory_server which is required in to plan the trajectory in MoveIt. Also, this launch file includes two files (`baxter_grippers.launch` and `trajectory_execution.launch`) from baxter_moveit_config which is in the MoveIt! Robots package. 
 
-**camera.launch** - The camera launchfile...
+**camera.launch** - This launch file launches The object_detection node (including lauding the parameter server). This launch file is for test and debug purposes only, because it does not activate the entire system. To activate the entire system, run the `baxter_move.launch` launch file.
 
 
 ### Test files
@@ -113,7 +113,7 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
 3. Table
 4. 2 trash bins
 4. Cans and bottles
-5. 3D Printed Bottle/Can Gripper Atachments (see CAD image and drawing below)
+5. 3D Printed Bottle/Can Gripper Atachments (see CAD image and drawing below):
   * This gripper was designed to work with most plastic bottles and aluminum cans.
   * The grippers are printed with PLA plastic, although most rigid 3D Printed materials would be appropriate. 
   * The grippers are dsigned to have 1/4" Thick Soft foam adhered to their inner radius, allowing the foam to conform to the bottle and provide extra grip.

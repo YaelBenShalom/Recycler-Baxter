@@ -35,13 +35,7 @@ class Detect:
         """ Initialize environment
         """
         # Initialize cans and bottles minimum/maximum diameter [pixels]
-        # Parameters are defined in the sort.yaml file
-        # self.calibration_diameter_min = 10   # [units are pixels]
-        # self.calibration_diameter_max = 20   # [units are pixels]
-        # self.can_diameter_min = 30          # [units are pixels]
-        # self.can_diameter_max = 40          # [units are pixels]
-        # self.bottle_diameter_min = 25       # [units are pixels]
-        # self.bottle_diameter_max = 28       # [units are pixels]
+        # Parameters are defined in the sort.yaml file and load from the launchfile
         self.calibration_diameter_min = rospy.get_param("calibration_diameter_min")
         self.calibration_diameter_max = rospy.get_param("calibration_diameter_max")
         self.can_diameter_min = rospy.get_param("can_diameter_min")
@@ -50,9 +44,6 @@ class Detect:
         self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")
 
         # Object Type Definitions
-        # self.ERROR = -1     # Initializing object type - error
-        # self.BOTTLE = 0     # Initializing object type - bottle
-        # self.CAN = 1        # Initializing object type - can
         self.ERROR = rospy.get_param("ERROR")  # Initializing object type - error
         self.BOTTLE = rospy.get_param("BOTTLE")  # Initializing object type - bottle
         self.CAN = rospy.get_param("CAN")  # Initializing object type - can
