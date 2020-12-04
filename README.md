@@ -79,7 +79,7 @@ The `object_detection` node uses this library to convert the points found on the
 
 
 ### Launchfiles
-**baxter_move.launch** - The project launchfile...
+**baxter_move.launch** - The project launch
 
 **camera.launch** - The camera launchfile...
 
