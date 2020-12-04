@@ -102,7 +102,7 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
 
 **MoveIt** - Motion planning library. Used to generate high-degree of freedom trajectories to grab the objects and throw them to the trash bins.
 
-**[MoveIt! Robots](https://github.com/ros-planning/moveit_robots)** - Motion planning library. Used to 
+**[MoveIt! Robots](https://github.com/ros-planning/moveit_robots)** - Motion planning library. It contains [baxter_moveit_config](https://github.com/ros-planning/moveit_robots/tree/kinetic-devel/baxter/baxter_moveit_config) package which is required for the operation of this project.
 
 **JTAS** - Joint Trajectory Action Server. Enables executing complex trajectories using software built-in to Baxter
 
