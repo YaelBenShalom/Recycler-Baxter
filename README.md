@@ -22,9 +22,14 @@ The Baxter in action:
 ### Dependencies Installation
 Install the `Intel Realsense` packages as specified at the following link. The libraries are required while the developer and debug packages are on https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages
 
+```
+sudo apt install python3-sphinx
+sudo apt install ros-noetic-rosdoc-lite
+```
 
 ### Quickstart Guide
 ...
+
 
 
 ## System Architecture and High Level Concepts
