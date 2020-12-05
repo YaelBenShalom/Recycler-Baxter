@@ -1,0 +1,33 @@
+actions: []
+authors: ''
+brief: ''
+bugtracker: ''
+depends:
+- message_generation
+- message_runtime
+- baxter_core_msgs
+- sensor_msgs
+- baxter_moveit_config
+- tf
+- rospy
+- moveit_msgs
+- baxter_interface
+- std_msgs
+- rviz
+- python-catkin-pkg
+- geometry_msgs
+- roscpp
+- catkin
+- rostest
+description: ME495 Final Project
+license: MIT
+maintainers: Jake <jketchum@u.northwestern.edu>, Kailey Smith <kaileysmith2021@u.northwestern.edu>,
+  Yael Ben Shalom <yaelbenshalom@u.northwestern.edu>, Mingqing Yuan <mingqingyuan2021@u.northwestern.edu>
+msgs:
+- Object
+package_type: package
+repo_url: ''
+srvs:
+- Board
+- DisplayImage
+url: ''
