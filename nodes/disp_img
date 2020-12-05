@@ -48,7 +48,7 @@ class Display_Image:
         """
         Send the image located at the specified path to the head
         display on Baxter.
-        @param path: path to the image file to load and send
+        :param path: path to the image file to load and send
         """
         #### WE WANT TO PASS A PATH INSTEAD OF USING THE ABOLUTE PATH
         if req.img_num == 1:

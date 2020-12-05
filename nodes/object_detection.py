@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""! This node is responsible for locating and classifying the objects located in front
+""" This node is responsible for locating and classifying the objects located in front
 of the robot.
 
 Publishes:
@@ -27,7 +27,7 @@ from can_sort.calibration import Calibration
 
 
 class Detect:
-    """! A class for classifying bottles and cans for sorting by baxter.
+    """ A class for classifying bottles and cans for sorting by baxter.
     A holding class for the node's functions. See file level doc string for 
     more detailed information about the ROS API. 
     """
@@ -68,15 +68,14 @@ class Detect:
         self.bridge = CvBridge()
 
     def image_processing(self):
-        """! Process a new incoming image from the realsense. 
+        """ Process a new incoming image from the realsense. 
         This function is responsible for processing the image into a an 
         OpenCV friendly format, and for storing it as a class variable.
-        Inputs:
+        Args:
           None
         
         Returns:
-          Showing the circled image.
-          Returns nothing. 
+          None 
         """
         # Configure color stream
         pipeline = rs.pipeline()
@@ -143,12 +142,12 @@ class Detect:
             pipeline.stop()
 
     def get_board_state(self, srv):
-        """! Run object detection to produce board state from stored image.
-        Inputs:
-          service (srv) - the board_state service.
+        """ Run object detection to produce board state from stored image.
+        Args:
+          service (srv): the board_state service.
         
         Returns:
-          BoardResponse (srv) - returning a service response of the objects type and location
+          BoardResponse (srv): returning a service response of the objects type and location
         """
         rospy.logdebug(f"get_board_state service")
         # Set local variable to not change the original image during run
@@ -169,12 +168,12 @@ class Detect:
         return response
 
     def detect_calibration_points(self, image):
-        """! This function detects bottles located on the table.
-        Inputs:
-          Image (img) - the stored image.
+        """ This function detects bottles located on the table.
+        Args:
+          Image (img): the stored image.
         
         Returns:
-          Bottles (list) - A list of bottles' state
+          Bottles (list): A list of bottles' state
                           (type - BOTTLE, sorted - False, location)
         """
         rospy.logdebug(f"Detecting Calibration Points")
@@ -184,12 +183,12 @@ class Detect:
         self.a, self.b, self.m, self.n = calibration.convert_position()
 
     def detect_cans(self, image):
-        """! This function detects cans located on the table.
-        Inputs:
-          Image (img) - the stored image.
+        """ This function detects cans located on the table.
+        Args:
+          Image (img): the stored image.
         
         Returns:
-          Cans (list) - A list of cans' state
+          Cans (list): A list of cans' state
                        (type - CAN, sorted - False, location)
         """
         rospy.logdebug(f"Detecting Cans")
@@ -209,12 +208,12 @@ class Detect:
         return cans
 
     def detect_bottles(self, image):
-        """! This function detects bottles located on the table.
-        Inputs:
-          Image (img) - the stored image.
+        """ This function detects bottles located on the table.
+        Args:
+          Image (img): the stored image.
         
         Returns:
-          Bottles (list) - A list of bottles' state
+          Bottles (list): A list of bottles' state
                           (type - BOTTLE, sorted - False, location)
         """
         rospy.logdebug(f"Detecting Bottles")
@@ -235,13 +234,13 @@ class Detect:
 
     def detect_circles(self, image, min_dia, max_dia):
         """! This function detects circle pattern in the stored image
-        Inputs:
-          Image (img) - the stored image.
-          min_dia (int) - the object minimum diameter
-          max_dia (int) - the object maximum diameter
+        Args:
+          Image (img): the stored image.
+          min_dia (int): the object minimum diameter
+          max_dia (int): the object maximum diameter
 
         Returns:
-          circles (list) - A list of the circles in the image
+          circles (list): A list of the circles in the image
         """
         # Go to greyscale
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -260,16 +259,16 @@ class Detect:
 
     def paint_circles(self, image, paint_image, color, min_dia, max_dia):
         """! This function finds all the circles with a specified diameter and paints them.
-        Inputs:
-          image (img) - the stored image.
-          paint_image (img) - the circle-painted image returned last time the function was called
+        Args:
+          image (img): the stored image.
+          paint_image (img): the circle-painted image returned last time the function was called
                               (If the function was never called before, image = paint_image).
-          color (rgb) - the desired color for the painted circles
-          min_dia (int) - the object minimum diameter
-          max_dia (int) - the object maximum diameter
+          color (rgb): the desired color for the painted circles
+          min_dia (int): the object minimum diameter
+          max_dia (int): the object maximum diameter
 
         Returns:
-          paint_image (img) - A circle-painted image.
+          paint_image (img): A circle-painted image.
         """
         # Finding the circles in the image    
         circles = self.detect_circles(image, min_dia, max_dia)
