@@ -130,6 +130,11 @@ class Recycle:
                 
     def add_planning_objs(self):
         """ Add table and trash bins to planning scene
+        Args:
+          None
+          
+        Returns:
+          None 
         """
         table_name = "table"
         table_pose = PoseStamped()
@@ -163,7 +168,12 @@ class Recycle:
 
         
     def get_image(self):
-        """ Getting board state from the board_state service
+        """ Getting board state from the board_state service. Sets object_found and object list variables
+        Args:
+          None
+          
+        Returns:
+          None 
         """
         # move arm to a good position before the initial poses
         right = baxter_interface.Limb('right')
@@ -211,8 +221,13 @@ class Recycle:
 
         
     def initialize_pos(self):
-        """ Move arm to a initial position before the initial poses
+        """ Moves arm to a initial position before the initial poses
         The initial position ensures no interference to the image
+        Args:
+          None
+          
+        Returns:
+          None 
         """
         right = baxter_interface.Limb('right')
 
@@ -225,11 +240,15 @@ class Recycle:
                 "right_w2": -0.033364082136507746}
 
         right.move_to_joint_positions(rcmd)
-        # self.display_img(img_num = 5)
 
         
     def move_to_home(self):
         """ This function moves the robot's arm to the home position
+        Args:
+          None
+          
+        Returns:
+          None 
         """
         print("Moving to the home position")
         
@@ -254,6 +273,13 @@ class Recycle:
         
     def move_to_object(self, obj_type, obj_x, obj_y):
         """ This function moves the robot's arm to a given position
+        Args:
+          obj_type (string): Name of the current object, either "soda" or "can"
+          obj_x (double): x-position of the object
+          obj_y (double): y-position of the object
+          
+        Returns:
+          None 
         """
         print("Moving to object perch position")
         if obj_type == "soda":
@@ -312,6 +338,11 @@ class Recycle:
         
     def grasp_object(self, obj_type):
         """ This function makes the robot's arm grasp an object, depends on the object's type
+        Args:
+          obj_type (string): Name of the current object, either "soda" or "can"
+          
+        Returns:
+          None 
         """
         #command_position(50) closes grippers correct distance for soda can
         if obj_type == "soda":
@@ -328,6 +359,13 @@ class Recycle:
         
     def move_to_bin(self, obj_type, obj_x, obj_y):
         """ This function moves the robot's arm to the appropriate trash bin (depends on the objects type)
+        Args:
+          obj_type (string): Name of the current object, either "soda" or "can"
+          obj_x (double): x-position of the object
+          obj_y (double): y-position of the object
+          
+        Returns:
+          None 
         """
         self.display_img(img_num=1)
         waypoints = []
