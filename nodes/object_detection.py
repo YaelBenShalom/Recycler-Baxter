@@ -85,8 +85,8 @@ class Detect:
         config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 6)
 
         # Recording video to bagfile
-        # config.enable_record_to_file("most_update_video")  # Comment this if you want to work of saved bagfile
-        config.enable_device_from_file("most_update_video")  # Uncomment this if you want to work of saved bagfile
+        config.enable_record_to_file("most_update_video")  # Comment this if you want to work of saved bagfile
+        # config.enable_device_from_file("most_update_video")  # Uncomment this if you want to work of saved bagfile
 
         # Start streaming
         pipeline.start(config)
