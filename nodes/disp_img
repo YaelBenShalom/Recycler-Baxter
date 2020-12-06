@@ -30,13 +30,13 @@ class Display_Image:
         display on Baxter.
         :param path: path to the image file to load and send
         Args:
-          req: 
+          req: Service request, an integer determinig which image to display
         
         Returns:
           DisplayImageResponse() (srv): returns a service respond that displays an image on Baxter's Display
         
         """
-        #### WE WANT TO PASS A PATH INSTEAD OF USING THE ABOLUTE PATH
+        #### WE WANT TO PASS A RELATIVE PATH INSTEAD OF USING THE ABOLUTE PATH
         if req.img_num == 1:
             path = "/images/head_images/recycle.jpg"
 
