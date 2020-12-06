@@ -28,8 +28,6 @@ from can_sort.calibration import Calibration
 
 class Detect:
     """ A class for classifying bottles and cans for sorting by baxter.
-    A holding class for the node's functions. See file level doc string for 
-    more detailed information about the ROS API. 
     """
     def __init__(self):
         """ Initialize environment
@@ -67,6 +65,10 @@ class Detect:
         # Define conversion between ROS image to OpenCV images
         self.bridge = CvBridge()
 
+#######################################################################################################################
+    
+    ### Functions: ###
+    
     def image_processing(self):
         """ Process a new incoming image from the realsense. 
         This function is responsible for processing the image into a an 
@@ -141,6 +143,7 @@ class Detect:
             # Stop streaming
             pipeline.stop()
 
+            
     def get_board_state(self, srv):
         """ Run object detection to produce board state from stored image.
         Args:
@@ -167,6 +170,7 @@ class Detect:
         print(f"response is {response}")
         return response
 
+    
     def detect_calibration_points(self, image):
         """ This function detects bottles located on the table.
         Args:
@@ -182,6 +186,7 @@ class Detect:
         calibration = Calibration(circles[0][1], circles[0][0])
         self.a, self.b, self.m, self.n = calibration.convert_position()
 
+        
     def detect_cans(self, image):
         """ This function detects cans located on the table.
         Args:
@@ -207,6 +212,7 @@ class Detect:
             cans.append(can)
         return cans
 
+    
     def detect_bottles(self, image):
         """ This function detects bottles located on the table.
         Args:
@@ -232,6 +238,7 @@ class Detect:
             bottles.append(bottle)
         return bottles
 
+    
     def detect_circles(self, image, min_dia, max_dia):
         """! This function detects circle pattern in the stored image
         Args:
@@ -257,6 +264,7 @@ class Detect:
                                   minRadius=min_dia, maxRadius=max_dia)
         return circles
 
+    
     def paint_circles(self, image, paint_image, color, min_dia, max_dia):
         """! This function finds all the circles with a specified diameter and paints them.
         Args:
