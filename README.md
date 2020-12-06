@@ -16,6 +16,7 @@ The Baxter in action:
 
 ![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/videos/Baxter_sorting.gif)
 
+View the full demo [here](https://drive.google.com/file/d/10anAmP4I5A87bw1hqXWV8cNA236D1xCu/view?usp=sharing):
 
 ## User Guide
 
