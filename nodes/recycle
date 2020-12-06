@@ -36,7 +36,9 @@ from sensor_msgs.msg import Image
 from can_sort.srv import DisplayImage, DisplayImageResponse
 
 # Recycle Node
+
 class Recycle:
+    """ A class for instructing Baxter to recycle bottles and cans """
     def __init__(self):
         """ Initialize environment
         """
