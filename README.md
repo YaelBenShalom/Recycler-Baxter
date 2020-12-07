@@ -10,7 +10,7 @@
 
 
 ## Project Overview
-In this project, we programmed a Rethink Baxter robot to sort bottles and cans located in front of it, ant throw them into separate recycle bins. We used computer vision to detect and locate the variety of randomly placed bottles and cans, and used MoveIt to control the robot.
+In this project, we programmed a Rethink Baxter robot to sort bottles and cans located in front of it, and drop them into separate recycle bins. We used computer vision to detect and locate a couple of randomly placed bottles and cans, and used MoveIt to control the robot.
 
 The Baxter in action:
 
@@ -60,18 +60,18 @@ The painted image:
 ![Computer_vision](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/computer_vision.png)
 
 
-**recycle.py** - Robot operation node. This node uses ROS's `MoveIt!` library for motion planning and manipulation (mainly the `compute_cartesian_path` command). After initalizing the move group commander for Baxter's right arm, this node adds a table to the planning scence to ensure that the robot does not collide with the table. A proxy `DisplayImage.srv` service is also created. The arm then moves to a predetermined position out of the camera's field of view and calls the `Board.srv` service. This service returns a list with the position and classification of all bottles and cans in the camera's view. In the last portion of the set-up the robot moves to a predetermined orientation to ensure smooth and predictable motion of the robot arm (This desired configuration was determined after extensive testing).
+**recycle.py** - Robot operation node. This node uses ROS's `MoveIt!` library for motion planning and manipulation (mainly the `compute_cartesian_path` command). After initalizing the move group commander for Baxter's right arm, this node adds a table to the planning scence to ensure that the robot does not collide with the table. A proxy `DisplayImage.srv` service is also created. The arm then moves to a predetermined position out of the camera's field of view and calls the `Board.srv` service. This service returns a list with the position and classification of all bottles and cans in the camera's view. In the last portion of the set-up the robot moves to a predetermined orientation to ensure smooth and predictable motion of the arm (This desired configuration was determined after testing).
 
 With the objects locations and classifications known, the robot then works through a while loop for the entirety of the list length. The loop functions as follows:
 1. Move to the home position where the robot is safely above all objects.
 2. For the current item in the list, display either the can image or the bottle image, depending on the classification.
-3. Next, move to that objects x,y corrdinate at a safe z height away. This is the same height for bottles and cans
+3. Next, move to the object's (x,y) corrdinate at a safe z height away. This is the same height for bottles and cans.
 4. Then move down to the appropriate perch height, depending on classification. (For example, the robot arm will be position further away from the table for bottle, since those are taller than cans).
-5. Once safely at the perch height, move down so that the object is cenerted in between the grippers. 
+5. Once safely at the perch height, move down so that the object is in between the grippers. 
 6. Grasp the object.
-7. Move back up to the position as step 3.
+7. Move back up to the "safe" position as step 3.
 8. Move back to the home position. This step was added to ensure predictable behavior of the robot arm. 
-9. Depending on the objects classification, move to the appropriate bin. Also, display the recylcing image.
+9. Depending on the object's classification, move to the appropriate bin. Also, display the recylcing image.
 10. Once over the bin, open the grippers and drop the object. Show that the object has been recycled with the bin image. 
 11. Repeat for all objects found. 
 
@@ -146,3 +146,4 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
 1. **Use machine learning algorithms for better objects classification** - Now, we can only classify specific shapes of bottles and cans. By using machine learning methods, we could classify different types of bottles and cans with the same label, and throw them to the same trash bin.
 2. **Add the ability to detect more types of items** - Now, we can only detect cans and bottles. In the future, we want to be able to detect and recycle a variety of objects, such as paper or different types of plastic. To do so, we need to improve our computer vision node (to detect those items), and improve our gripper.
 3. **Implement the 3D-Printed Grippers** - We did not end up having time to implement the 3D-Printed Grippers for our testing. Using the stock grippers did not provide a very secure grip - so we had to slow down the robot's motion to prevent the bottle from flying out. Using the 3D Printed Grippers with foam padding would allow for a more secure grip, which would let us speed the robot back up. It would also allow grabbing a greater variety of cylindrical objects (from the body) due to the foam's conformability.
+4. **Use the Baxter's hand camera to improve gripping accuracy** - We are currently relying solely on the realsense camera to determine the the object location and grasping positions. However, a more robust solution would be to use the baxter camera and ensure that a) an object is being grasped and b) the object being being grasped is actually in the center of the grippers. With the hand camera video, we would be able to adjust and center the center the gripper to ensure there are no object-gripper collisions.
