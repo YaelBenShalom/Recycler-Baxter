@@ -12,7 +12,7 @@
 ## Project Overview
 In this project, we programmed a Rethink Baxter robot to sort bottles and cans located in front of it, and drop them into separate recycle bins. We used computer vision to detect and locate a couple of randomly placed bottles and cans, and used MoveIt to control the robot.
 
-A Google sLides Presentation Summarizing the project can also be viewed [here](https://docs.google.com/presentation/d/1T56hbLROX8WcPCFQQ3-daPc4Sb6g7DFvq7fUSDCqaT0/edit?usp=sharing)
+A Google slides presentation summarizing the project can also be viewed [here](https://docs.google.com/presentation/d/1T56hbLROX8WcPCFQQ3-daPc4Sb6g7DFvq7fUSDCqaT0/edit?usp=sharing)
 
 
 The Baxter Robot (Scott's Bot) in action:
