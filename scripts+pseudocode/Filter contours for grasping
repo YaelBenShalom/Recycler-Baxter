@@ -1,0 +1,29 @@
+# Included in vision node
+# The idea is filter non-use contours of the objects on table since we can only grab one object at a time
+# Get real diameter of object first 
+
+if object_diameter > ?:      # Cans
+  num_obj = len(contours)
+  if num_obj > 0:
+    moments = cv2.moments(contours[0])      # Filter other unused objects
+    if moments['m00']> ? :        # Area of the image
+      #Center of the image
+      cx = int(moms['m10']/moms['m00'])
+      cy = int(moms['m01']/moms['m00'])
+      
+      # Need to find real position:
+      x_loc
+      y_Loc
+else:
+  num_obj2 = len(contours)         # Bottles
+  if num_obj2 > 0:
+    moments = cv2.moments(contours[0])      # Filter other unused objects
+    if moments['m00']> ? :        # Area of the image
+      #Center of the image
+      cx = int(moms['m10']/moms['m00'])
+      cy = int(moms['m01']/moms['m00'])
+      
+      # Need to find real position:
+      x_loc
+      y_Loc
+    

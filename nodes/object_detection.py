@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-"""! This node is responsible for locating and classifying the sorting objects.
 
-Subscribes:
-    /cameras/right_hand_camera - Image, Photos from the baxter hand camera. 
+""" This node is responsible for locating and classifying the objects located in front
+of the robot.
 
 Publishes:
-    Nothing Presently. 
+    image_pub - published the circled image after detecting the bottles and cans 
 
 Services:
-    Nothing Presently.
-
-TODO
+    state_srv - a service containing information about the objects type (-1, 0, 1),
+                have they been sorted yet (True, False), and their location (x, y, z,
+                while the z coordinate is always 0).
 """
 
 import rospy
@@ -21,69 +20,82 @@ import numpy as np
 import cv2 as cv
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Pose
-from sensor_msgs.msg import Image, CameraInfo, CompressedImage
+from sensor_msgs.msg import Image
 from can_sort.msg import Object
 from can_sort.srv import Board, BoardResponse
 import pyrealsense2 as rs
+from can_sort.calibration import Calibration
 
 
-class Detect():
-    """! A class for classifying bottles and cans for sorting by baxter.
-    A holding class for the node's functions. See file level doc string for 
-    more detailed information about the ROS API. 
+class Detect:
+    """ A class for classifying bottles and cans for sorting by baxter.
     """
 
     def __init__(self):
-        # Identification Parameters
-        # TODO - replace with yaml parameters
-        self.can_diameter_min = 21       # [units are pixels]
-        self.can_diameter_max = 26       # [units are pixels]
-        self.bottle_diameter_min = 10    # [units are pixels]
-        self.bottle_diameter_max = 15    # [units are pixels]
-        # self.can_diameter_min = rospy.get_param("can_diameter_min")             # Initializing cans minimum diameter [pixels]
-        # self.can_diameter_max = rospy.get_param("can_diameter_max")             # Initializing cans maximum diameter [pixels]
-        # self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")       # Initializing bottles minimum diameter [pixels]
-        # self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")       # Initializing bottles maximum diameter [pixels]
+        """ Initialize environment
+        """
+        # Initialize cans and bottles minimum/maximum diameter [pixels]
+        # Parameters are defined in the sort.yaml file and load from the launchfile
+        self.calibration_diameter_min = rospy.get_param("calibration_diameter_min")
+        self.calibration_diameter_max = rospy.get_param("calibration_diameter_max")
+        self.can_diameter_min = rospy.get_param("can_diameter_min")
+        self.can_diameter_max = rospy.get_param("can_diameter_max")
+        self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")
+        self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")
 
         # Object Type Definitions
-        # TODO - replace with yaml parameters
-        self.ERROR = -1     # Initializing object type - error
-        self.BOTTLE = 0     # Initializing object type - bottle
-        self.CAN = 1        # Initializing object type - can
-        # self.ERROR = rospy.get_param("ERROR")       # Initializing object type - error
-        # self.BOTTLE = rospy.get_param("BOTTLE")     # Initializing object type - bottle
-        # self.CAN = rospy.get_param("CAN")           # Initializing object type - can
-        
-        # self.R = rospy.get_param("~pub_freq")           # initializing the frequency at which to publish messages
+        self.ERROR = rospy.get_param("ERROR")  # Initializing object type - error
+        self.BOTTLE = rospy.get_param("BOTTLE")  # Initializing object type - bottle
+        self.CAN = rospy.get_param("CAN")  # Initializing object type - can
+
         self.rate = rospy.Rate(100)
         self.detection_mode = True
+        self.img = None
+        self.objects = []
 
-        # # Info for default image 
-        # self.rospack = rospkg.RosPack()
-        # path = self.rospack.get_path(name = 'can_sort') + '/camera_images/11.10.20/'
-        # self.image_directory = path
-        # self.image_name = "bottle_top_1.jpg"
+        # Initialize calibration constants
+        self.a, self.b, self.m, self.n = None, None, None, None
+
+        # Initialize publisher
+        self.image_pub = rospy.Publisher("/image_out", Image, queue_size=1)
+        rospy.logdebug(f"Publisher initialized")
+
+        # Initialize service
+        self.state_srv = rospy.Service('board_state', Board, self.get_board_state)
+        rospy.logdebug(f"Service initialized")
+
+        # Define conversion between ROS image to OpenCV images
+        self.bridge = CvBridge()
+
+#######################################################################################################################
     
-        # #TODO: figure out correct commenting style 
-        # ##! Stores the current image. 
-        # self.set_default_image()
+    ### Functions: ###
+    
+    def image_processing(self):
+        """ Process a new incoming image from the realsense. 
+        This function is responsible for processing the image into a an 
+        OpenCV friendly format, and for storing it as a class variable.
+        Args:
+          None
         
-        # #self.setup_image_stream()
-        
-        state = rospy.Service('get_board_state', Board, self.get_board_state)
-
+        Returns:
+          None 
+        """
         # Configure color stream
         pipeline = rs.pipeline()
         config = rs.config()
-        config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
-        config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+        config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 6)
 
         # Recording video to bagfile
-        # config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
-        config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
+        config.enable_record_to_file("most_update_video")  # Comment this if you want to work of saved bagfile
+        # config.enable_device_from_file("most_update_video")  # Uncomment this if you want to work of saved bagfile
 
         # Start streaming
         pipeline.start(config)
+
+        # Waiting for the image to stabilize
+        rospy.sleep(2)
+
         try:
             while True:
                 # Wait for a coherent color frame
@@ -95,129 +107,95 @@ class Detect():
                 # Convert image to numpy array
                 self.img = np.asanyarray(color_frame.get_data())
                 height, width = self.img.shape[:2]
-                self.img = cv.resize(self.img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
-                # self.img = self.img[390:790, 680:1080]
+
+                # Change image size
+                self.img = cv.resize(self.img, (int(2 * width), int(2 * height)), interpolation=cv.INTER_CUBIC)
+                self.img = self.img[500:1500, 1500:2700]
+
                 # Check the file name was right
-                if self.img is None: 
-                    sys.exit("""could not read the image. Make sure you are running 
-                    the script from the /scripts folder.""")
+                if self.img is None:
+                    sys.exit("""could not read the image""")
+
+                # Find calibration points - green
+                paint_image = self.paint_circles(self.img, self.img, (0, 255, 0), self.calibration_diameter_min,
+                                                 self.calibration_diameter_max)
 
                 # Find cans - blue
-                paint_image = self.paint_circles(self.img, self.img, (0, 0, 255), 21, 26)
+                paint_image = self.paint_circles(self.img, paint_image, (0, 0, 255), self.can_diameter_min,
+                                                 self.can_diameter_max)
 
                 # Find bottles - red
-                paint_image = self.paint_circles(self.img, paint_image, (255, 0, 0), 10, 16)
+                paint_image = self.paint_circles(self.img, paint_image, (255, 0, 0), self.bottle_diameter_min,
+                                                 self.bottle_diameter_max)
+
+                img_out = self.bridge.cv2_to_imgmsg(paint_image, "bgr8")
+                self.image_pub.publish(img_out)
 
                 # Show image
-                cv.namedWindow("detected_circle", cv.WINDOW_AUTOSIZE)
+                cv.namedWindow("detected_circles", cv.WINDOW_AUTOSIZE)
                 cv.imshow("detected_circles", paint_image)
                 key = cv.waitKey(1)
 
                 # Press esc or 'q' to close the image window
                 if key & 0xFF == ord('q') or key == 27:
-                            cv.destroyAllWindows()
-                            break
+                    cv.destroyAllWindows()
+                    break
 
         finally:
             # Stop streaming
             pipeline.stop()
 
-
-    # def setup_image_stream(self):
-    #     """! Initialize the ros subscript to incoming images and CVbridges. 
-    #     This is required for normal operations since this is how the node
-    #     gets it's images for processing. However, during unit testing other
-    #     means of loading images may be appropriate. 
-    #     """
-    #     rospy.logdebug(f"Setting up image stream")
-    #     self.bridge = CvBridge()
-    #     self.image_sub = rospy.Subscriber('/cameras/right_hand_camera', Image,
-    #                                 self.image_callback, queue_size=1)
-    #     self.capture = cv.VideoCapture(2)  # TODO - which camera??
-
-
-    def setup_services(self):
-        """! Set up the the ros services provided by this node. 
-        This should be called after all other setup has been performed to
-        prevent invalid service calls.
-        """
-        rospy.logdebug(f"Setting up services")
-        rospy.wait_for_service('get_board_state')
-        # state = rospy.ServiceProxy('get_board_state', Board, self.get_board_state) # Call the get_board_state service
-
-        # state_service = Board()
-        # state_service.objects = objects
-        # state(state_service.objects)
-        # rospy.sleep(1)
-
-    # def set_default_image(self):
-    #     """! Load a default image from the local files. Used for testing. 
-    #     """  
-    #     # Read in the image
-    #     self.img = cv.imread(self.image_directory + self.image_name)
-    #     # Check the file name was right
-    #     if self.img is None: 
-    #         rospy.logwarn("WARNING: could not read default image")
-
-
-    # def image_callback(self, image_message): 
-    #     """! Handle a new incoming image from the robot. 
-    #     This function is responsible for processing the image into a an 
-    #     OpenCV friendly format, and for storing it as a class variable.
-         
-    #     @param image_message, a ross Image message for processing. 
-    #     """         
-    #     rospy.logdebug(f"Processing incoming image")               
-    #     try:
-    #         cv_image = self.bridge.imgmsg_to_cv2(image_message,
-    #                                 desired_encoding='passthrough')
-    #     except CvBridgeError as e:
-    #         rospy.logwarn(e)
-
-    #     #TODO: store centrally or remove.
-    #     (rows,cols,channels) = cv_image.shape
-
-
+            
     def get_board_state(self, srv):
-        """! Run object detection to produce board state from stored image.
-        Currently incomplete 
-        """
-
-        # This is just the script for testing, everything here needs to change
-        # Set local so no change during run
-        img = self.img
-
-        rospy.logdebug(f"get_board_state service")
-        objects = []
-
-        objects.extend(self.detect_cans(img))
-        objects.extend(self.detect_bottles(img))
-        print(objects)
-        # # Find cans - blue
-        # paint_image = self.paint_circles(img, img, (0, 0, 255), 21, 26)
-
-        # # Find bottles - red
-        # paint_image = self.paint_circles(img, paint_image, (255, 0, 0), 10, 15)
-
-        # # Show image
-        # cv.namedWindow("detected_circles", cv.WINDOW_AUTOSIZE)
-        # cv.imshow("detected_circles", paint_image)
-        # key = cv.waitKey(1)
-
-        # Press esc or 'q' to close the image window
-        # if key & 0xFF == ord('q') or key == 27:
-        #     cv.destroyAllWindows()
-
-        return BoardResponse(objects)
-      
-
-    def detect_cans(self, image):
-        """! This function detects cans located on the table.
-        Inputs:
-          Image (img) - the stored image.
+        """ Run object detection to produce board state from stored image.
+        Args:
+          service (srv): the board_state service.
         
         Returns:
-          Cans (list) - A list of cans' state
+          BoardResponse (srv): returning a service response of the objects type and location
+        """
+        rospy.logdebug(f"get_board_state service")
+        # Set local variable to not change the original image during run
+        img = self.img
+        self.objects = []
+
+        # Calling calibration function to get the calibration constants
+        self.detect_calibration_points(img)
+
+        # Building the output service
+        response = BoardResponse()
+        if len(self.detect_cans(img)) != 0:
+            self.objects.extend(self.detect_cans(img))
+        if len(self.detect_bottles(img)) != 0:
+            self.objects.extend(self.detect_bottles(img))
+        response.objects = self.objects
+        print(f"response is {response}")
+        return response
+
+    
+    def detect_calibration_points(self, image):
+        """ This function detects bottles located on the table.
+        Args:
+          Image (img): the stored image.
+        
+        Returns:
+          Bottles (list): A list of bottles' state
+                          (type - BOTTLE, sorted - False, location)
+        """
+        rospy.logdebug(f"Detecting Calibration Points")
+        circles = self.detect_circles(image, self.calibration_diameter_min, self.calibration_diameter_max)
+        print("calibration circles: ", circles)
+        calibration = Calibration(circles[0][1], circles[0][0])
+        self.a, self.b, self.m, self.n = calibration.convert_position()
+
+        
+    def detect_cans(self, image):
+        """ This function detects cans located on the table.
+        Args:
+          Image (img): the stored image.
+        
+        Returns:
+          Cans (list): A list of cans' state
                        (type - CAN, sorted - False, location)
         """
         rospy.logdebug(f"Detecting Cans")
@@ -227,22 +205,23 @@ class Detect():
         for c in circles[0]:
             can = Object()
             can.type = self.CAN
-            can.sorted = False 
-            can.location.x = c[0]
-            can.location.y = c[1]
-            can.location.z = -1 #TODO: Implement a decent vertical offset 
-            cans.append(can)
+            can.sorted = False
 
+            # Finding x, y [meters] using x, y [pixels] and the calibration constants
+            can.location.x = self.m * c[1] + self.n
+            can.location.y = self.a * c[0] + self.b
+            can.location.z = 0.  # This value will by overwrite by the motion node
+            cans.append(can)
         return cans
 
-
+    
     def detect_bottles(self, image):
-        """! This function detects bottles located on the table.
-        Inputs:
-          Image (img) - the stored image.
+        """ This function detects bottles located on the table.
+        Args:
+          Image (img): the stored image.
         
         Returns:
-          Bottles (list) - A list of bottles' state
+          Bottles (list): A list of bottles' state
                           (type - BOTTLE, sorted - False, location)
         """
         rospy.logdebug(f"Detecting Bottles")
@@ -252,102 +231,75 @@ class Detect():
         for c in circles[0]:
             bottle = Object()
             bottle.type = self.BOTTLE
-            bottle.sorted = False 
-            bottle.location.x = c[0]
-            bottle.location.y = c[1]
-            bottle.location.z = -1 #TODO: Implement a decent vertical offset 
+            bottle.sorted = False
+
+            # Finding x, y [meters] using x, y [pixels] and the calibration constants
+            bottle.location.x = self.m * c[1] + self.n
+            bottle.location.y = self.a * c[0] + self.b
+            bottle.location.z = 0.  # This value will be overwrite by the motion node
             bottles.append(bottle)
-            
         return bottles
 
-
-    def detect_circles(self, image, min_dia = 10, max_dia = 30):
-        """! This function detects circle pattern in the stored image 
-        Inputs:
-          Image (img) - the stored image.
-          min_dia (int) - the object minimum diameter
-          max_dia (int) - the object maximum diameter
+    
+    def detect_circles(self, image, min_dia, max_dia):
+        """! This function detects circle pattern in the stored image
+        Args:
+          Image (img): the stored image.
+          min_dia (int): the object minimum diameter
+          max_dia (int): the object maximum diameter
 
         Returns:
-          circles (list) - A list of the circles in the image
+          circles (list): A list of the circles in the image
         """
-        # Go to greyscale   
+        # Go to greyscale
         grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
         _, grey_thresh = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
 
-        # Blur the image
-        grey_med_blur = cv.medianBlur(grey_thresh, 5)
-        grey_gauss_blur = cv.GaussianBlur(grey_med_blur, (5,5), 0)
+        # Add blur to the image for better detection
+        grey_blur = cv.medianBlur(grey_thresh, 5)
+        grey_blur2 = cv.GaussianBlur(grey_blur, (5, 5), 0)
 
         # Run the algorithm, get the circles
-        rows = grey_gauss_blur.shape[0]
-        circles = cv.HoughCircles(grey_gauss_blur, cv.HOUGH_GRADIENT, 1, rows / 16, 
-                                param1 = 100, param2 = 30,
-                                minRadius = min_dia, maxRadius = max_dia)
+        rows = grey_blur2.shape[0]
+        circles = cv.HoughCircles(grey_blur2, cv.HOUGH_GRADIENT, 1, rows / 20,
+                                  param1=100, param2=30,
+                                  minRadius=min_dia, maxRadius=max_dia)
         return circles
 
+    
+    def paint_circles(self, image, paint_image, color, min_dia, max_dia):
+        """! This function finds all the circles with a specified diameter and paints them.
+        Args:
+          image (img): the stored image.
+          paint_image (img): the circle-painted image returned last time the function was called
+                              (If the function was never called before, image = paint_image).
+          color (rgb): the desired color for the painted circles
+          min_dia (int): the object minimum diameter
+          max_dia (int): the object maximum diameter
 
-    def paint_circles(self, image, paint_image, color, min_dia, max_dia = 10):
-        """! This function finds all the specified circles and paints them.
-        It is for testing purpose only
-        """         
-        # cv.imshow("img", img)
-        # crop_img = img[400:800, 700:1100]
-        # cv.imshow("crop_img", crop_img)
-        # Go to greyscale   
-        grey = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
-        _, grey = cv.threshold(grey, 200, 255, cv.THRESH_TRUNC)
-        # cv.imshow("th3", grey)
+        Returns:
+          paint_image (img): A circle-painted image.
+        """
+        # Finding the circles in the image    
+        circles = self.detect_circles(image, min_dia, max_dia)
 
-        # Blur the image
-        # grey = cv.blur(grey,( 5,5))
-        # cv.imshow("blur", grey)
-        grey = cv.medianBlur(grey, 5)
-        # cv.imshow("medianBlur", grey)
-        grey = cv.GaussianBlur(grey, (5,5), 0)
-        # cv.imshow("GaussianBlur", grey)
-
-        # Run the algorithm, get the circles
-        rows = grey.shape[0]
-        circles = cv.HoughCircles(grey, cv.HOUGH_GRADIENT, 1, rows / 16, 
-                                param1 = 100, param2 = 30,
-                                minRadius = min_dia, maxRadius = max_dia)
-        
         # Paint the circles onto our paint image
-        if circles is not None: 
+        if circles is not None:
             circles = np.uint16(np.around(circles))
             for i in circles[0, :]:
-                print ("circle: ", i)
                 center = (i[0], i[1])
                 cv.circle(paint_image, center, 1, (0, 100, 100), 3)
-                radius = i[2]
-                cv.circle(paint_image, center, radius, color, 3)
-
+                cv.circle(paint_image, center, i[2], color, 3)
         return paint_image
-
-
-    def run_detection(self):
-        while not rospy.is_shutdown():
-            rospy.logdebug(f"Run Message")
-            if self.detection_mode:
-                # self.setup_services()
-                self.rate.sleep()
-                cv.destroyAllWindows()
-            else:
-                rospy.logdebug(f"In pause mode")
-            self.rate.sleep()
-        
 
 
 def main():
     """ The main() function """
-    rospy.init_node("object_detection", log_level = rospy.DEBUG)
+    rospy.init_node("object_detection", log_level=rospy.DEBUG)
     rospy.logdebug(f"classification node started")
     detect = Detect()
-    detect.run_detection()
-    rospy.sleep(5)
-    rospy.spin()
-
+    detect.image_processing()
+    rospy.sleep(1)
     
 
 if __name__ == '__main__':

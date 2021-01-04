@@ -1,0 +1,4 @@
+<!--Used for testing calibration-->
+<launch>
+  <test test-name="test_calibration" pkg="can_sort" type="test_calibration.py" />
+</launch>
