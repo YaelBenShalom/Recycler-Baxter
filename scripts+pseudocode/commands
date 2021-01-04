@@ -1,0 +1,31 @@
+## Always set enviornment variables
+export ROS_MASTER_URI=http://10.42.0.2:11311
+export ROS_IP=10.42.0.1
+unset ROS_HOSTNAME
+
+## To open the right hand camera image
+rosrun image_view image_view image:=/cameras/right_hand_camera/image
+
+## To open the head camera image
+rosrun image_view image_view image:=/cameras/head_camera/image
+
+## To save images
+rosrun image_view image_saver image:=/cameras/right_hand_camera/image
+rosrun image_view image_saver image:=/cameras/head_camera/image
+
+#When you cant see the head camera, its probably because your subed to the right and ledt hand cameras
+#And you can only sub to two cameras at a time, so this is an issue
+#To check which cameras are open
+rosrun baxter_tools camera_control.py -l
+
+#To close the left hand camera
+rosrun baxter_tools camera_control.py -c left_hand_camera
+
+#To open the head camera
+rosrun baxter_tools camera_control.py -o head_camera -r 1280x800
+
+#To open the camera
+ROS_NAMESPACE=/cameras/head_camera rosrun image_proc image_proc image_raw:=image camera_info:=camera_info
+rqt_image_view
+
+#To take pics on head camera

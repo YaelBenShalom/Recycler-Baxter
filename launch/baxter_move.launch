@@ -1,0 +1,34 @@
+<launch>
+   <!--Set to true to run each node. Default is Recycle set to true, object_detection set to false.-->
+   <!--The recycle node launches and kills the object detection nodeduring normal operation.-->
+   <arg name="Recycle" default="True"/>
+   <arg name="object_detection" default="False"/>
+
+   <!--object_detection configuration parameters file-->
+   <rosparam command="load" file="$(find can_sort)/config/sort.yaml" />
+   <node name = "display_images" pkg = "can_sort" type = "disp_img"/>
+
+  <!--Main node to control the robot and make it "recycle" the bottles and cans, utilizes MoveIt -->
+  <group if="$(arg Recycle)">
+     <node name="recycle" pkg="can_sort" type="recycle" output = "screen"/>
+  <node name="joint_trajectory_action_server" pkg="baxter_interface" type="joint_trajectory_action_server.py" />
+  </group>
+
+  <!--Node for object_detection, false by default (used for CV testing) -->
+   <group if="$(arg object_detection)">
+   <node name="object_detection" pkg="can_sort" type="object_detection.py" />
+   </group>
+   
+  <!--Sets up baxter's Grippers-->
+  <include file="$(find baxter_moveit_config)/launch/baxter_grippers.launch">
+   <arg name = "right_electric_gripper" value = "True"/>
+   <arg name = "left_electric_gripper" value = "True"/>
+  </include>
+
+   <!--Rethink Baxter trajectory launch file-->
+  <include file = "$(find baxter_moveit_config)/launch/trajectory_execution.launch">
+      <param name="trajectory_execution/allowed_execution_duration_scaling" value="200.0"/> <!-- default 1.5 -->
+      <param name="trajectory_execution/allowed_goal_duration_margin" value="200.0"/> <!-- default 1.0 -->
+  </include>
+
+</launch>
