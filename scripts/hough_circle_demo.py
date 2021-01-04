@@ -3,7 +3,6 @@
 """! This script is a test of the object segmentation code for open CV.
 It is primiarily intended as a demo and should not be used without modification
 in the final robot setup.
-If problems, contact: Jake
 """
 
 import cv2 as cv
@@ -60,6 +59,7 @@ try:
             print(image)
             cv.imshow("test", image)
             return(cv.subtract(image, table_color))
+
 
         def paint_circles(image, paint_image, color, min_rad, max_rad = 30):
             """! This function finds all the specified circles and paints them.
