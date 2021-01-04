@@ -1,11 +1,15 @@
-# configuration file for obj_detection  
-  
-  #object codes
+  # Object codes
   ERROR: -1
   BOTTLE: 0
   CAN: 1
+  
+# Configuration file for obj_detection  
+  can_diameter_min: 21
+  can_diameter_max: 26
+  bottle_diameter_min: 10
+  bottle_diameter_max: 15
 
-  #calibration parameters for cans and bottles
+# Calibration parameters for cans and bottles
   calibration_diameter_min: 10
   calibration_diameter_max: 20
   can_diameter_min: 35

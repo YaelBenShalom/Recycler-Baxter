@@ -1,4 +1,5 @@
 <launch>
+
    <!--Set to true to run each node. Default is Recycle set to true, object_detection set to false.-->
    <!--The recycle node launches and kills the object detection nodeduring normal operation.-->
    <arg name="Recycle" default="True"/>

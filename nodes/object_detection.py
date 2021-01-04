@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 """ This node is responsible for locating and classifying the objects located in front
 of the robot.
 
@@ -29,6 +30,7 @@ from can_sort.calibration import Calibration
 class Detect:
     """ A class for classifying bottles and cans for sorting by baxter.
     """
+
     def __init__(self):
         """ Initialize environment
         """
@@ -298,7 +300,7 @@ def main():
     detect = Detect()
     detect.image_processing()
     rospy.sleep(1)
-
+    
 
 if __name__ == '__main__':
     try:
