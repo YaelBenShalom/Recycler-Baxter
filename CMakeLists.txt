@@ -25,9 +25,6 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-## This macro ensures modules and global scripts declared therein get installed
-catkin_python_setup()
-
 ## Generate messages in the 'msg' folder
 add_message_files(DIRECTORY msg
     FILES

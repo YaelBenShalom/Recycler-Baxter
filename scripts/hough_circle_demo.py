@@ -11,7 +11,7 @@ from os import listdir
 import numpy as np
 import time
 import pyrealsense2 as rs
-
+  
 
 # Configure color stream
 pipeline = rs.pipeline()
@@ -20,7 +20,8 @@ config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
 config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
 
 # Recording video to bagfile
-config.enable_record_to_file("bagfiles/camera_video")
+# config.enable_record_to_file("bagfiles/camera_video2")  # Comment this if you want to work of saved bagfile
+config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
 
 # Start streaming
 pipeline.start(config)
@@ -35,6 +36,9 @@ try:
 
         # Convert image to numpy array
         img = np.asanyarray(color_frame.get_data())
+        height, width = img.shape[:2]
+        img = cv.resize(img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
+        # img = img[390:790, 680:1080]
 
         # Check the file name was right
         if img is None: 
@@ -101,14 +105,15 @@ try:
         remove_table(img)
 
         # Show image
-        cv.namedWindow('detected_circles', cv.WINDOW_AUTOSIZE)
+
+        cv.namedWindow("detected_circles", cv.WINDOW_AUTOSIZE)
         cv.imshow("detected_circles", paint_image)
         key = cv.waitKey(1)
 
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('q') or key == 27:
-                    cv.destroyAllWindows()
-                    break
+            cv.destroyAllWindows()
+            break
 
 finally:
     # Stop streaming
