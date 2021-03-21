@@ -14,6 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
     tf
 )
 
+## Set-up the workspace
+catkin_python_setup()
+
 # Add rostest files
 if(CATKIN_ENABLE_TESTING)
     find_package(rostest REQUIRED)
@@ -63,10 +66,11 @@ catkin_package(
 catkin_install_python(
   PROGRAMS
   nodes/recycle
+  nodes/recycle_ML
   nodes/object_detection.py
+  nodes/object_detection_ML.py
   nodes/disp_img
   src/${PROJECT_NAME}/calibration.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
-
 

@@ -15,11 +15,11 @@ import pyrealsense2 as rs
 # Configure color stream
 pipeline = rs.pipeline()
 config = rs.config()
-config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 6)
 
 # Recording video to bagfile
-# config.enable_record_to_file("bagfiles/camera_video2") # Comment this if you want to work of saved bagfile
-config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
+config.enable_record_to_file("bagfiles/most_update_video") # Comment this if you want to work of saved bagfile
+# config.enable_device_from_file("bagfiles/camera_video") # Uncomment this if you want to work of saved bagfile
 
 # Start streaming
 pipeline.start(config)
@@ -35,8 +35,8 @@ try:
         # Convert image to numpy array
         img = np.asanyarray(color_frame.get_data())
         height, width = img.shape[:2]
-        img = cv.resize(img, (int(2.5*width), int(2.5*height)), interpolation = cv.INTER_CUBIC)
-        # img = img[390:790, 680:1080]
+        img = cv.resize(img, (int(2 * width), int(2 * height)), interpolation=cv.INTER_CUBIC)
+        img = img[500:1500, 1500:2700]
 
         # Check the file name was right
         if img is None: 

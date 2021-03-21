@@ -38,12 +38,12 @@ sudo apt install ros-noetic-rosdoc-lite
 * To ensure you have the latest version of all packages, run `wstool update`
 * Source and `catkin_make` your workspace
 * To use the Baxter, plug its ethernet cord into your computer
-* To connect to the Baxter, move to your workspace directory and run `source src/can_sort/scripts+pseudocode/Baxter_setup.bash ` 
+* To connect to the Baxter, move to your workspace directory and run `source src/can_sort/Baxter_setup.bash` 
   * To ensure you have connectect sucessfully, run `ping baxter.local`
 * Enable the robot using `rosrun baxter_tools enable_robot.py -e`
   * If you are having issues connecting to Baxter, please follow the full instructions outlined [here](https://nu-msr.github.io/me495_site/lecture13_rethink.html).
 * To start soring run `rosrun baxter_interface joint_trajectory_action_server.py &`
-* Then run `roslaunch roslaunch can_sort baxter_move.launch object_detection:=true`
+* Then run `roslaunch can_sort baxter_move.launch object_detection:=true`
 * Watch in awe as the Baxter sorts and recycles cans and bottles!
 
 ## System Architecture and High Level Concepts
