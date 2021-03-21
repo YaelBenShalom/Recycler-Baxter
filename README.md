@@ -126,6 +126,11 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
 **JTAS** - Joint Trajectory Action Server. Enables executing complex trajectories using software built-in to Baxter
 
 
+### Machine Learning Perception Pipeline
+In order to make the package compatible with the machine learning perception pipeline suggested in my [Objects Recognition and Classification](https://github.com/YaelBenShalom/Objects-Recognition-and-Classification) project, I added an adjusted recycle node (`recycle_ML.py`) and an adjusted baxter_move launchfile (`baxter_move_ML.launch`).<br>
+To launch the package with the new detection method, follow the instructions on the Objects Recognition and Classification package (download the dataset, create and train the model, etc) and launch the `baxter_move_ML.launch` launchfile.
+
+
 ### Physical Equipment:
 1. Baxter Rethink robot
 2. Realsense D435i depth camera
