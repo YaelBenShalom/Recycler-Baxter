@@ -150,7 +150,7 @@ To launch the package with the new detection method, follow the instructions on 
 
 ![Gripper Diagram](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Diagram.png)
 
-![Gripper Drawing](hhttps://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Drawing.png)
+![Gripper Drawing](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Drawing.png)
 
 
 ## Future Work
