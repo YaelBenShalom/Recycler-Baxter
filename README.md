@@ -17,7 +17,7 @@ A Google slides presentation summarizing the project can also be viewed [here](h
 
 The Baxter Robot (Scott's Bot) in action:
 
-![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/videos/Baxter_sorting.gif)
+![Sorting](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting.gif)
 
 View the full demo [here](https://drive.google.com/file/d/10anAmP4I5A87bw1hqXWV8cNA236D1xCu/view?usp=sharing):
 
@@ -33,16 +33,16 @@ sudo apt install ros-noetic-rosdoc-lite
 
 ### Quickstart Guide
 * In the `/src` directory of your catkin workspace, download `can_sort.rosinstall`
-* While still in the `/src` directoty run `wstool init` to initalize the workspace
+* While still in the `/src` directory run `wstool init` to initialize the workspace
 * To merge the workspace with the rosinstall file, run `wstool merge can_sort.rosinstall`
 * To ensure you have the latest version of all packages, run `wstool update`
 * Source and `catkin_make` your workspace
 * To use the Baxter, plug its ethernet cord into your computer
 * To connect to the Baxter, move to your workspace directory and run `source src/can_sort/Baxter_setup.bash` 
-  * To ensure you have connectect sucessfully, run `ping baxter.local`
+  * To ensure you have connected successfully, run `ping baxter.local`
 * Enable the robot using `rosrun baxter_tools enable_robot.py -e`
   * If you are having issues connecting to Baxter, please follow the full instructions outlined [here](https://nu-msr.github.io/me495_site/lecture13_rethink.html).
-* To start soring run `rosrun baxter_interface joint_trajectory_action_server.py &`
+* To start sorting run `rosrun baxter_interface joint_trajectory_action_server.py &`
 * Then run `roslaunch can_sort baxter_move.launch object_detection:=true`
 * Watch in awe as the Baxter sorts and recycles cans and bottles!
 
@@ -60,27 +60,27 @@ To call the `Board.srv` service, open a new terminal and run `rosservice call /b
 
 The painted image:
 
-![Computer_vision](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/computer_vision.png)
+![Computer_vision](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/computer_vision.png)
 
 
-**recycle.py** - Robot operation node. This node uses ROS's `MoveIt!` library for motion planning and manipulation (mainly the `compute_cartesian_path` command). After initalizing the move group commander for Baxter's right arm, this node adds a table to the planning scence to ensure that the robot does not collide with the table. A proxy `DisplayImage.srv` service is also created. The arm then moves to a predetermined position out of the camera's field of view and calls the `Board.srv` service. This service returns a list with the position and classification of all bottles and cans in the camera's view. In the last portion of the set-up the robot moves to a predetermined orientation to ensure smooth and predictable motion of the arm (This desired configuration was determined after testing).
+**recycle.py** - Robot operation node. This node uses ROS's `MoveIt!` library for motion planning and manipulation (mainly the `compute_cartesian_path` command). After initializing the move group commander for Baxter's right arm, this node adds a table to the planning scene to ensure that the robot does not collide with the table. A proxy `DisplayImage.srv` service is also created. The arm then moves to a predetermined position out of the camera's field of view and calls the `Board.srv` service. This service returns a list with the position and classification of all bottles and cans in the camera's view. In the last portion of the set-up the robot moves to a predetermined orientation to ensure smooth and predictable motion of the arm (This desired configuration was determined after testing).
 
 With the objects locations and classifications known, the robot then works through a while loop for the entirety of the list length. The loop functions as follows:
 1. Move to the home position where the robot is safely above all objects.
 2. For the current item in the list, display either the can image or the bottle image, depending on the classification.
-3. Next, move to the object's (x,y) corrdinate at a safe z height away. This is the same height for bottles and cans.
+3. Next, move to the object's (x,y) coordinate at a safe z height away. This is the same height for bottles and cans.
 4. Then move down to the appropriate perch height, depending on classification. (For example, the robot arm will be position further away from the table for bottle, since those are taller than cans).
 5. Once safely at the perch height, move down so that the object is in between the grippers. 
 6. Grasp the object.
 7. Move back up to the "safe" position as step 3.
 8. Move back to the home position. This step was added to ensure predictable behavior of the robot arm. 
-9. Depending on the object's classification, move to the appropriate bin. Also, display the recylcing image.
+9. Depending on the object's classification, move to the appropriate bin. Also, display the recycling image.
 10. Once over the bin, open the grippers and drop the object. Show that the object has been recycled with the bin image. 
 11. Repeat for all objects found. 
 
 The robot motion:
 
-![Sorting](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/videos/Baxter_sorting2.gif)
+![Sorting](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting2.gif)
 
 
 **disp_img.py** - Displays an image on the Baxter's head display.
@@ -98,20 +98,20 @@ The `object_detection` node uses this library to convert the points found on the
 
 
 ### Launchfiles
-**baxter_move.launch** - This launch file launches both recyle node and object_detection node. The recyle node runs along with joint_trajectory_server which is required in to plan the trajectory in MoveIt. Also, this launch file includes two files (`baxter_grippers.launch` and `trajectory_execution.launch`) from baxter_moveit_config which is in the MoveIt! Robots package. 
+**baxter_move.launch** - This launch file launches both recycle node and object_detection node. The recycle node runs along with joint_trajectory_server which is required in to plan the trajectory in MoveIt. Also, this launch file includes two files (`baxter_grippers.launch` and `trajectory_execution.launch`) from baxter_moveit_config which is in the MoveIt! Robots package. 
 
 **camera.launch** - This launch file launches The object_detection node (including lauding the parameter server). This launch file is for test and debug purposes only, because it does not activate the entire system. To activate the entire system, run the `baxter_move.launch` launch file.
 
 
 ### Test files
 **test_calibration.py** - A test file that tests the python calibration library.
-The testfile tests the calibration accuracy using 2 points with known pixel-meter conversion:
+The test file tests the calibration accuracy using 2 points with known pixel-meter conversion:
 1. point1 = [722.5, 937.5] (pixels) = [0.55, -0.50] (meters)
 2. point2 = [403.5, 417.5] (pixels) = [0.80, -0.10] (meters)
 
 For those points, the pixel values were measured from the image and the meter values were measured physically in the lab using the Baxter.
 
-To run the testfile when running catkin_make, run `catkin_make run_tests` from the root of workspace.
+To run the test file when running catkin_make, run `catkin_make run_tests` from the root of workspace.
 
 
 ### Algorithms and Libraries Used
@@ -127,8 +127,11 @@ To run the testfile when running catkin_make, run `catkin_make run_tests` from t
 
 
 ### Machine Learning Perception Pipeline
-In order to make the package compatible with the machine learning perception pipeline suggested in my [Objects Recognition and Classification](https://github.com/YaelBenShalom/Objects-Recognition-and-Classification) project, I added an adjusted recycle node (`recycle_ML.py`) and an adjusted baxter_move launchfile (`baxter_move_ML.launch`).<br>
+In order to make the package compatible with the machine learning perception pipeline suggested in my [Objects Recognition and Classification](https://github.com/YaelBenShalom/Objects-Recognition-and-Classification) project, I added an adjusted recycle node (`recycle_ML.py`) and an adjusted baxter_move launch file (`baxter_move_ML.launch`).<br>
 To launch the package with the new detection method, follow the instructions on the Objects Recognition and Classification package (download the dataset, create and train the model, etc) and launch the `baxter_move_ML.launch` launchfile.
+
+![Sorting with Machine Learning](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting_ML.gif)
+
 
 
 ### Physical Equipment:
@@ -137,17 +140,17 @@ To launch the package with the new detection method, follow the instructions on 
 3. Table
 4. 2 trash bins
 4. Cans and bottles
-5. 3D Printed Bottle/Can Gripper Atachments (see CAD image and drawing below):
+5. 3D Printed Bottle/Can Gripper Attachments (see CAD image and drawing below):
   * This gripper was designed to work with most plastic bottles and aluminum cans.
   * The grippers are printed with PLA plastic, although most rigid 3D Printed materials would be appropriate. 
-  * The grippers are dsigned to have 1/4" Thick Soft foam adhered to their inner radius, allowing the foam to conform to the bottle and provide extra grip.
-  * Make sure to check the shrinkage of your 3D printer and scale the post cutouts appropriatetly so the attachments can attach to Baxter's stock Gripper Posts.
+  * The grippers are designed to have 1/4" Thick Soft foam adhered to their inner radius, allowing the foam to conform to the bottle and provide extra grip.
+  * Make sure to check the shrinkage of your 3D printer and scale the post cutouts appropriately so the attachments can attach to Baxter's stock Gripper Posts.
   * The CAD part and drawing files for the 3D Printed Gripper Attachment for Baxter can be found in the CAD Folder of this repository.
   * They can also be exported from OnShape by following this link: [CAD and Drawing](https://cad.onshape.com/documents/55d17f6159ce035c20241bbe/w/991f13206933eabdd1713bd5/e/5e41ab8ba39d8543f1dda1ea)
 
-![Gripper Diagram](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/Baxter%20Bottle-Can%20Gripper%20Diagram.png)
+![Gripper Diagram](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Diagram.png)
 
-![Gripper Drawing](https://github.com/ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots/blob/master/images/Baxter%20Bottle-Can%20Gripper%20Attachment%20Drawing.png)
+![Gripper Drawing](hhttps://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Drawing.png)
 
 
 ## Future Work
