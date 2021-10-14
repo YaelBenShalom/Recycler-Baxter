@@ -8,7 +8,7 @@
     version: release-1.2.0
 - git:
     local-name: can_sort
-    uri: git@github.com:ME495-EmbeddedSystems/final-project-scott-s-bot-for-tots.git
+    uri: git@github.com:YaelBenShalom/Recycler-Baxter.git
 - git:
     local-name: moveit_robots
     uri: https://github.com/ros-planning/moveit_robots.git

@@ -1,7 +1,25 @@
 # Recycle Sorting Baxter
-## ME495: Embedded Systems Final Project (Fall 2020)
+* ME495: Embedded Systems Final Project (Fall 2020)
 
-## Group Members:
+
+Table of Contents
+-----------------
+  * [Group Members](#group-members)
+  * [Project Overview](#project-overview)
+  * [User Guide](#user-guide)
+    * [Dependencies Installation](#dependencies-installation)
+    * [Quickstart Guide](#quickstart-guide)
+  * [System Architecture and High Level Concepts](#system-architecture-and-high-level-concepts)
+    * [Nodes](#nodes)
+    * [Launch Files](#launch-files)
+    * [Test Files](#test-files)
+    * [Algorithms and Libraries Used](#algorithms-and-libraries-used)
+    * [Machine Learning Perception Pipeline](#machine-learning-perception-pipeline)
+  * [Physical Equipment](#physical-equipment)
+  * [Future Work](#future-work)
+
+
+## Group Members
 - Chris Aretakis
 - Jake Ketchum
 - Yael Ben Shalom
@@ -97,13 +115,13 @@ The library returns the linearization constants:
 The `object_detection` node uses this library to convert the points found on the image from pixels to meters.
 
 
-### Launchfiles
+### Launch Files
 **baxter_move.launch** - This launch file launches both recycle node and object_detection node. The recycle node runs along with joint_trajectory_server which is required in to plan the trajectory in MoveIt. Also, this launch file includes two files (`baxter_grippers.launch` and `trajectory_execution.launch`) from baxter_moveit_config which is in the MoveIt! Robots package. 
 
 **camera.launch** - This launch file launches The object_detection node (including lauding the parameter server). This launch file is for test and debug purposes only, because it does not activate the entire system. To activate the entire system, run the `baxter_move.launch` launch file.
 
 
-### Test files
+### Test Files
 **test_calibration.py** - A test file that tests the python calibration library.
 The test file tests the calibration accuracy using 2 points with known pixel-meter conversion:
 1. point1 = [722.5, 937.5] (pixels) = [0.55, -0.50] (meters)
@@ -123,18 +141,17 @@ To run the test file when running catkin_make, run `catkin_make run_tests` from 
 
 **[MoveIt! Robots](https://github.com/ros-planning/moveit_robots)** - Motion planning library. It contains [baxter_moveit_config](https://github.com/ros-planning/moveit_robots/tree/kinetic-devel/baxter/baxter_moveit_config) package which is required for the operation of this project.
 
-**JTAS** - Joint Trajectory Action Server. Enables executing complex trajectories using software built-in to Baxter
+**JTAS** - Joint Trajectory Action Server. Enables executing complex trajectories using software built-in to Baxter.
 
 
 ### Machine Learning Perception Pipeline
 In order to make the package compatible with the machine learning perception pipeline suggested in my [Objects Recognition and Classification](https://github.com/YaelBenShalom/Objects-Recognition-and-Classification) project, I added an adjusted recycle node (`recycle_ML.py`) and an adjusted baxter_move launch file (`baxter_move_ML.launch`).<br>
-To launch the package with the new detection method, follow the instructions on the Objects Recognition and Classification package (download the dataset, create and train the model, etc) and launch the `baxter_move_ML.launch` launchfile.
+To launch the package with the new detection method, follow the instructions on the Objects Recognition and Classification package (download the dataset, create and train the model, etc) and launch the `baxter_move_ML.launch` launch file.
 
 ![Sorting with Machine Learning](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting_ML.gif)
 
 
-
-### Physical Equipment:
+## Physical Equipment
 1. Baxter Rethink robot
 2. Realsense D435i depth camera
 3. Table
