@@ -2,5 +2,5 @@
    <!--Used to launch object_detection (camera) node only. Used for testing-->
    <rosparam command="load" file="$(find can_sort)/config/sort.yaml" />
    <node name="object_detection_ML" pkg="can_sort" type="object_detection_ML.py"/>
-   
+
 </launch>

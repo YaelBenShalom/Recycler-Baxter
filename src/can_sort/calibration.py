@@ -14,6 +14,7 @@ class Calibration:
     The class gets the coordinated of 2 calibration points in pixels, and converts
     it to meters, using linearization.
     """
+
     def __init__(self, point1, point2):
         """ Initialize environment
         """

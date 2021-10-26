@@ -36,16 +36,20 @@ class Detect:
         """
         # Initialize cans and bottles minimum/maximum diameter [pixels]
         # Parameters are defined in the sort.yaml file and load from the launchfile
-        self.calibration_diameter_min = rospy.get_param("calibration_diameter_min")
-        self.calibration_diameter_max = rospy.get_param("calibration_diameter_max")
+        self.calibration_diameter_min = rospy.get_param(
+            "calibration_diameter_min")
+        self.calibration_diameter_max = rospy.get_param(
+            "calibration_diameter_max")
         self.can_diameter_min = rospy.get_param("can_diameter_min")
         self.can_diameter_max = rospy.get_param("can_diameter_max")
         self.bottle_diameter_min = rospy.get_param("bottle_diameter_min")
         self.bottle_diameter_max = rospy.get_param("bottle_diameter_max")
 
         # Object Type Definitions
-        self.ERROR = rospy.get_param("ERROR")  # Initializing object type - error
-        self.BOTTLE = rospy.get_param("BOTTLE")  # Initializing object type - bottle
+        # Initializing object type - error
+        self.ERROR = rospy.get_param("ERROR")
+        # Initializing object type - bottle
+        self.BOTTLE = rospy.get_param("BOTTLE")
         self.CAN = rospy.get_param("CAN")  # Initializing object type - can
 
         self.rate = rospy.Rate(100)
@@ -61,23 +65,24 @@ class Detect:
         rospy.logdebug(f"Publisher initialized")
 
         # Initialize service
-        self.state_srv = rospy.Service('board_state', Board, self.get_board_state)
+        self.state_srv = rospy.Service(
+            'board_state', Board, self.get_board_state)
         rospy.logdebug(f"Service initialized")
 
         # Define conversion between ROS image to OpenCV images
         self.bridge = CvBridge()
 
 #######################################################################################################################
-    
+
     ### Functions: ###
-    
+
     def image_processing(self):
         """ Process a new incoming image from the realsense. 
         This function is responsible for processing the image into a an 
         OpenCV friendly format, and for storing it as a class variable.
         Args:
           None
-        
+
         Returns:
           None 
         """
@@ -87,7 +92,8 @@ class Detect:
         config.enable_stream(rs.stream.color, 1920, 1080, rs.format.bgr8, 6)
 
         # Recording video to bagfile
-        config.enable_record_to_file("most_update_video")  # Comment this if you want to work of saved bagfile
+        # Comment this if you want to work of saved bagfile
+        config.enable_record_to_file("most_update_video")
         # config.enable_device_from_file("most_update_video")  # Uncomment this if you want to work of saved bagfile
 
         # Start streaming
@@ -109,7 +115,8 @@ class Detect:
                 height, width = self.img.shape[:2]
 
                 # Change image size
-                self.img = cv.resize(self.img, (int(2 * width), int(2 * height)), interpolation=cv.INTER_CUBIC)
+                self.img = cv.resize(
+                    self.img, (int(2 * width), int(2 * height)), interpolation=cv.INTER_CUBIC)
                 self.img = self.img[500:1500, 1500:2700]
 
                 # Check the file name was right
@@ -145,12 +152,11 @@ class Detect:
             # Stop streaming
             pipeline.stop()
 
-            
     def get_board_state(self, srv):
         """ Run object detection to produce board state from stored image.
         Args:
           service (srv): the board_state service.
-        
+
         Returns:
           BoardResponse (srv): returning a service response of the objects type and location
         """
@@ -172,34 +178,34 @@ class Detect:
         print(f"response is {response}")
         return response
 
-    
     def detect_calibration_points(self, image):
         """ This function detects bottles located on the table.
         Args:
           Image (img): the stored image.
-        
+
         Returns:
           Bottles (list): A list of bottles' state
                           (type - BOTTLE, sorted - False, location)
         """
         rospy.logdebug(f"Detecting Calibration Points")
-        circles = self.detect_circles(image, self.calibration_diameter_min, self.calibration_diameter_max)
+        circles = self.detect_circles(
+            image, self.calibration_diameter_min, self.calibration_diameter_max)
         print("calibration circles: ", circles)
         calibration = Calibration(circles[0][1], circles[0][0])
         self.a, self.b, self.m, self.n = calibration.convert_position()
 
-        
     def detect_cans(self, image):
         """ This function detects cans located on the table.
         Args:
           Image (img): the stored image.
-        
+
         Returns:
           Cans (list): A list of cans' state
                        (type - CAN, sorted - False, location)
         """
         rospy.logdebug(f"Detecting Cans")
-        circles = self.detect_circles(image, self.can_diameter_min, self.can_diameter_max)
+        circles = self.detect_circles(
+            image, self.can_diameter_min, self.can_diameter_max)
         rospy.logdebug(f"circles = {circles}")
         cans = []
         for c in circles[0]:
@@ -214,18 +220,18 @@ class Detect:
             cans.append(can)
         return cans
 
-    
     def detect_bottles(self, image):
         """ This function detects bottles located on the table.
         Args:
           Image (img): the stored image.
-        
+
         Returns:
           Bottles (list): A list of bottles' state
                           (type - BOTTLE, sorted - False, location)
         """
         rospy.logdebug(f"Detecting Bottles")
-        circles = self.detect_circles(image, self.bottle_diameter_min, self.bottle_diameter_max)
+        circles = self.detect_circles(
+            image, self.bottle_diameter_min, self.bottle_diameter_max)
         rospy.logdebug(f"circles = {circles}")
         bottles = []
         for c in circles[0]:
@@ -240,7 +246,6 @@ class Detect:
             bottles.append(bottle)
         return bottles
 
-    
     def detect_circles(self, image, min_dia, max_dia):
         """! This function detects circle pattern in the stored image
         Args:
@@ -266,7 +271,6 @@ class Detect:
                                   minRadius=min_dia, maxRadius=max_dia)
         return circles
 
-    
     def paint_circles(self, image, paint_image, color, min_dia, max_dia):
         """! This function finds all the circles with a specified diameter and paints them.
         Args:
@@ -280,7 +284,7 @@ class Detect:
         Returns:
           paint_image (img): A circle-painted image.
         """
-        # Finding the circles in the image    
+        # Finding the circles in the image
         circles = self.detect_circles(image, min_dia, max_dia)
 
         # Paint the circles onto our paint image
@@ -300,7 +304,7 @@ def main():
     detect = Detect()
     detect.image_processing()
     rospy.sleep(1)
-    
+
 
 if __name__ == '__main__':
     try:
