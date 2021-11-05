@@ -1,6 +1,7 @@
 # Recycle Sorting Baxter
 
-- ME495: Embedded Systems Final Project (Fall 2020)
+ME495: Embedded Systems Final Project (Fall 2020).<br>
+Take a look at my [portfolio post](https://yaelbenshalom.github.io/recycler_baxter/index.html) for more information about the project.
 
 ## Table of Contents
 
