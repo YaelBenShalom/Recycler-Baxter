@@ -33,7 +33,9 @@ In this project, we programmed a Rethink Baxter robot to sort bottles and cans l
 
 The Baxter Robot (Scott's Bot) in action:
 
-![Sorting](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting.gif)
+<p align="center">
+  <img align="center" src="https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting.gif">
+</p>
 
 View the full demo [here](https://drive.google.com/file/d/10anAmP4I5A87bw1hqXWV8cNA236D1xCu/view?usp=sharing).
 
@@ -43,12 +45,14 @@ A Google slides presentation summarizing the project can also be viewed [here](h
 
 ### Dependencies Installation
 
-Install the `Intel Realsense` packages as specified at the following link. The libraries are required while the developer and debug packages are on https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages
-
-```
-sudo apt install python3-sphinx
-sudo apt install ros-noetic-rosdoc-lite
-```
+1. Install the `Intel Realsense` packages. For installation instructions, visit the [librealsense page
+](https://github.com/IntelRealSense/librealsense/blob/master/doc/distribution_linux.md#installing-the-packages).
+ 
+ 2. Install `sphinx` documentation:
+  ```
+  sudo apt install python3-sphinx
+  sudo apt install ros-noetic-rosdoc-lite
+  ```
 
 ### Quickstart Guide
 
@@ -83,7 +87,9 @@ To call the `Board.srv` service, open a new terminal and run `rosservice call /b
 
 The painted image:
 
-![Computer_vision](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/computer_vision.png)
+<p align="center">
+  <img align="center" src="https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/computer_vision.png" width="50%">
+</p>
 
 **recycle.py** - Robot operation node. This node uses ROS's `MoveIt!` library for motion planning and manipulation (mainly the `compute_cartesian_path` command). After initializing the move group commander for Baxter's right arm, this node adds a table to the planning scene to ensure that the robot does not collide with the table. A proxy `DisplayImage.srv` service is also created. The arm then moves to a predetermined position out of the camera's field of view and calls the `Board.srv` service. This service returns a list with the position and classification of all bottles and cans in the camera's view. In the last portion of the set-up the robot moves to a predetermined orientation to ensure smooth and predictable motion of the arm (This desired configuration was determined after testing).
 
@@ -103,7 +109,9 @@ With the objects locations and classifications known, the robot then works throu
 
 The robot motion:
 
-![Sorting](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting2.gif)
+<p align="center">
+  <img align="center" src="https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting2.gif">
+</p>
 
 **disp_img.py** - Displays an image on the Baxter's head display.
 The node converts the image to imgmsg (using OpenCV), and publishes the message to the `/robot/xdisplay` display using `DisplayImage.srv` service.
@@ -153,7 +161,9 @@ To run the test file when running catkin_make, run `catkin_make run_tests` from 
 In order to make the package compatible with the machine learning perception pipeline suggested in my [Objects Recognition and Classification](https://github.com/YaelBenShalom/Objects-Recognition-and-Classification) project, I added an adjusted recycle node (`recycle_ML.py`) and an adjusted baxter_move launch file (`baxter_move_ML.launch`).<br>
 To launch the package with the new detection method, follow the instructions on the Objects Recognition and Classification package (download the dataset, create and train the model, etc) and launch the `baxter_move_ML.launch` launch file.
 
-![Sorting with Machine Learning](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting_ML.gif)
+<p align="center">
+  <img align="center" src="https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/videos/Baxter_sorting_ML.gif">
+</p>
 
 ## Physical Equipment
 
@@ -171,9 +181,13 @@ To launch the package with the new detection method, follow the instructions on 
 - The CAD part and drawing files for the 3D Printed Gripper Attachment for Baxter can be found in the CAD Folder of this repository.
 - They can also be exported from OnShape by following this link: [CAD and Drawing](https://cad.onshape.com/documents/55d17f6159ce035c20241bbe/w/991f13206933eabdd1713bd5/e/5e41ab8ba39d8543f1dda1ea)
 
-![Gripper Diagram](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Diagram.png)
+<p align="center">
+  <img align="center" src="https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Diagram.png" width="42%">
+  <img align="center" src="https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Drawing.png" width="40%">
+</p>
 
-![Gripper Drawing](https://github.com/YaelBenShalom/Recycler-Baxter/blob/master/images/Gripper_Drawing.png)
+<p align="center">
+</p>
 
 ## Future Work
 
